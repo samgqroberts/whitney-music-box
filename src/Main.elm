@@ -7,10 +7,8 @@ import Canvas.Settings exposing (..)
 import Canvas.Settings.Advanced exposing (..)
 import Canvas.Settings.Line exposing (..)
 import Canvas.Settings.Text exposing (..)
-import Color exposing (Color)
-import Debug
-import Html exposing (Html, div, h1, img, text)
-import Html.Attributes as Attributes exposing (src)
+import Color
+import Html exposing (Html, div)
 import Time exposing (Posix)
 
 
@@ -19,12 +17,12 @@ import Time exposing (Posix)
 
 
 type alias Model =
-    { time : Float }
+    { startTime : Maybe Float, currentTime : Float }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { time = 0 }, Cmd.none )
+    ( { startTime = Nothing, currentTime = 0 }, Cmd.none )
 
 
 
@@ -36,10 +34,22 @@ type Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg { time } =
+update msg model =
     case msg of
         AnimationFrame t ->
-            ( { time = t |> Time.posixToMillis |> toFloat }, Cmd.none )
+            let
+                currentTime =
+                    t |> Time.posixToMillis |> toFloat
+
+                startTime =
+                    case model.startTime of
+                        Just s ->
+                            Just s
+
+                        Nothing ->
+                            Just currentTime
+            in
+            ( { model | currentTime = currentTime, startTime = startTime }, Cmd.none )
 
 
 
@@ -47,7 +57,7 @@ update msg { time } =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions { time } =
+subscriptions _ =
     onAnimationFrame AnimationFrame
 
 
@@ -55,17 +65,22 @@ subscriptions { time } =
 ---- VIEW ----
 
 
+w : number
 w =
     500
 
 
+h : number
 h =
     500
 
 
 view : Model -> Html Msg
-view { time } =
+view { startTime, currentTime } =
     let
+        timeSinceStart =
+            Maybe.withDefault 0 <| Maybe.map (\x -> currentTime - x) startTime
+
         center =
             ( w / 2, h / 2 )
 
@@ -76,13 +91,13 @@ view { time } =
             10
 
         t =
-            time / 1000
+            timeSinceStart / 1000
 
         sined =
-            sin t
+            sin (t - (pi / 2))
 
         cosed =
-            cos t
+            cos (t - (pi / 2))
 
         dotCenter =
             ( w / 2 + cosed * radius, h / 2 + sined * radius )
