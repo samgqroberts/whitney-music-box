@@ -12,6 +12,7 @@ import Color
 import Html exposing (Html, div)
 import Html.Attributes
 import Html.Events exposing (onClick)
+import PlayState exposing (PlayAction(..), PlayState, getTimeSinceStart)
 import Time exposing (Posix)
 
 
@@ -20,7 +21,7 @@ import Time exposing (Posix)
 
 
 type alias Model =
-    { startTime : Maybe Float
+    { playState : PlayState
     , currentTime : Float
     , played : Bool
     }
@@ -28,7 +29,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { startTime = Nothing, currentTime = 0, played = False }, Cmd.none )
+    ( { playState = { current = Stopped, history = [] }, currentTime = 0, played = False }, Cmd.none )
 
 
 {-| Convert a timeSinceStart value to the position of the dot along the circumference
@@ -55,40 +56,52 @@ type Msg
     = AnimationFrame Posix
     | PlaySound String
     | Start
-
-
-getTimeSinceStart : { a | currentTime : number, startTime : Maybe number } -> number
-getTimeSinceStart { currentTime, startTime } =
-    Maybe.withDefault 0 <| Maybe.map (\x -> currentTime - x) startTime
+    | Stop
+    | Pause
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Start ->
-            ( { model | startTime = Just model.currentTime, played = False }, Cmd.none )
+            ( { model | playState = PlayState.push (Playing model.currentTime) model.playState, played = False }, Cmd.none )
 
-        AnimationFrame t ->
+        Stop ->
+            ( { model | playState = PlayState.push Stopped model.playState, played = False }, Cmd.none )
+
+        Pause ->
+            ( { model | playState = PlayState.push (Paused model.currentTime) model.playState }, Cmd.none )
+
+        AnimationFrame currentPosix ->
             let
                 currentTime =
-                    t |> Time.posixToMillis |> toFloat
-
-                timeSinceStart =
-                    getTimeSinceStart <| { currentTime = currentTime, startTime = model.startTime }
-
-                cmdM =
-                    if timeSinceStart > 1000 && not model.played then
-                        Just <| playSound "xkcd"
-
-                    else
-                        Nothing
+                    currentPosix |> Time.posixToMillis |> toFloat
             in
-            ( { model
-                | currentTime = currentTime
-                , played = Maybe.withDefault model.played <| Maybe.map (\_ -> True) cmdM
-              }
-            , Maybe.withDefault Cmd.none cmdM
-            )
+            case model.playState.current of
+                Stopped ->
+                    ( { model | currentTime = currentTime }, Cmd.none )
+
+                Paused _ ->
+                    ( { model | currentTime = currentTime }, Cmd.none )
+
+                Playing _ ->
+                    let
+                        timeSinceStart =
+                            getTimeSinceStart currentTime model.playState
+
+                        cmdM =
+                            if timeSinceStart > 1000 && not model.played then
+                                Just <| playSound "xkcd"
+
+                            else
+                                Nothing
+                    in
+                    ( { model
+                        | currentTime = currentTime
+                        , played = Maybe.withDefault model.played <| Maybe.map (\_ -> True) cmdM
+                      }
+                    , Maybe.withDefault Cmd.none cmdM
+                    )
 
         PlaySound s ->
             ( { model | played = True }, playSound s )
@@ -151,8 +164,14 @@ view model =
         dotRadius =
             10
 
+        dotPeriod =
+            3000
+
+        timeSinceStart =
+            getTimeSinceStart model.currentTime model.playState
+
         dp =
-            dotPosition 3000 <| getTimeSinceStart model
+            dotPosition dotPeriod timeSinceStart
 
         dc =
             dotCenter dp radius center
@@ -167,7 +186,11 @@ view model =
                 ]
     in
     div []
-        [ canvas, Html.button [ onClick Start, Html.Attributes.id "startButton" ] [ Html.text "start" ] ]
+        [ canvas
+        , Html.button [ onClick Start, Html.Attributes.id "startButton" ] [ Html.text "start" ]
+        , Html.button [ onClick Stop ] [ Html.text "stop" ]
+        , Html.button [ onClick Pause ] [ Html.text "pause" ]
+        ]
 
 
 
