@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Browser.Events exposing (onAnimationFrame)
@@ -17,12 +17,15 @@ import Time exposing (Posix)
 
 
 type alias Model =
-    { startTime : Maybe Float, currentTime : Float }
+    { startTime : Maybe Float
+    , currentTime : Float
+    , played : Bool
+    }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { startTime = Nothing, currentTime = 0 }, Cmd.none )
+    ( { startTime = Nothing, currentTime = 0, played = False }, Cmd.none )
 
 
 
@@ -31,6 +34,12 @@ init _ =
 
 type Msg
     = AnimationFrame Posix
+    | PlaySound String
+
+
+getTimeSinceStart : { a | currentTime : number, startTime : Maybe number } -> number
+getTimeSinceStart { currentTime, startTime } =
+    Maybe.withDefault 0 <| Maybe.map (\x -> currentTime - x) startTime
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -48,8 +57,27 @@ update msg model =
 
                         Nothing ->
                             Just currentTime
+
+                timeSinceStart =
+                    getTimeSinceStart <| { currentTime = currentTime, startTime = startTime }
+
+                cmdM =
+                    if timeSinceStart > 1000 && not model.played then
+                        Just <| playSound "xkcd"
+
+                    else
+                        Nothing
             in
-            ( { model | currentTime = currentTime, startTime = startTime }, Cmd.none )
+            ( { model
+                | currentTime = currentTime
+                , startTime = startTime
+                , played = Maybe.withDefault model.played <| Maybe.map (\_ -> True) cmdM
+              }
+            , Maybe.withDefault Cmd.none cmdM
+            )
+
+        PlaySound s ->
+            ( { model | played = True }, playSound s )
 
 
 
@@ -59,6 +87,13 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     onAnimationFrame AnimationFrame
+
+
+
+---- PORTS ----
+
+
+port playSound : String -> Cmd msg
 
 
 
@@ -76,10 +111,10 @@ h =
 
 
 view : Model -> Html Msg
-view { startTime, currentTime } =
+view model =
     let
         timeSinceStart =
-            Maybe.withDefault 0 <| Maybe.map (\x -> currentTime - x) startTime
+            getTimeSinceStart model
 
         center =
             ( w / 2, h / 2 )
