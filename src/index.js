@@ -23,11 +23,13 @@ document.getElementById('startButton').addEventListener('click', () => {
 })
 
 const playSound = (message) => {
-  // TODO use message... at all
-  console.log('playing sound', message)
   if (!audioContext) {
     console.error('cannot play sound, audio context not initialized');
     return;
+  }
+  const frequency = parseFloat(message);
+  if (isNaN(frequency)) {
+    console.error('cannot play sound, given frequency is NaN:', message);
   }
   const osc = audioContext.createOscillator();
   osc.connect(masterGainNode);
@@ -35,8 +37,7 @@ const playSound = (message) => {
   const cosineTerms = new Float32Array(sineTerms.length);
   const waveform = audioContext.createPeriodicWave(cosineTerms, sineTerms);
   osc.setPeriodicWave(waveform)
-  const c5Frequency = 523.251130601197269;
-  osc.frequency.value = c5Frequency;
+  osc.frequency.value = frequency;
   osc.start();
   setTimeout(() => {
     osc.stop();

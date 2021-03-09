@@ -20,16 +20,60 @@ import Time exposing (Posix)
 ---- MODEL ----
 
 
+c5Freq =
+    523.2511306011972
+
+
+d5Freq =
+    587.3295358348151
+
+
+e5Freq =
+    659.2551138257398
+
+
+g5Freq =
+    783.9908719634985
+
+
+c6Freq =
+    1046.5022612023945
+
+
+type alias Dot =
+    { frequency : Float
+    , periodMultiple : Int
+    }
+
+
+type alias Config =
+    { dots : List Dot
+    , period : Float
+    }
+
+
+simpleConfig : Config
+simpleConfig =
+    { dots =
+        [ { frequency = c5Freq, periodMultiple = 1 }
+        , { frequency = e5Freq, periodMultiple = 2 }
+        , { frequency = g5Freq, periodMultiple = 3 }
+        , { frequency = c6Freq, periodMultiple = 4 }
+        ]
+    , period = 3000
+    }
+
+
 type alias Model =
     { playState : PlayState
     , currentTime : Float
-    , played : Bool
+    , config : Config
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { playState = { current = Stopped, history = [] }, currentTime = 0, played = False }, Cmd.none )
+    ( { playState = { current = Stopped, history = [] }, currentTime = 0, config = simpleConfig }, Cmd.none )
 
 
 {-| Convert a timeSinceStart value to the position of the dot along the circumference
@@ -54,7 +98,6 @@ dotPosition period timeSinceStart =
 
 type Msg
     = AnimationFrame Posix
-    | PlaySound String
     | Start
     | Stop
     | Pause
@@ -64,10 +107,10 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Start ->
-            ( { model | playState = PlayState.push (Playing model.currentTime) model.playState, played = False }, Cmd.none )
+            ( { model | playState = PlayState.push (Playing model.currentTime) model.playState }, Cmd.none )
 
         Stop ->
-            ( { model | playState = PlayState.push Stopped model.playState, played = False }, Cmd.none )
+            ( { model | playState = PlayState.push Stopped model.playState }, Cmd.none )
 
         Pause ->
             ( { model | playState = PlayState.push (Paused model.currentTime) model.playState }, Cmd.none )
@@ -86,25 +129,37 @@ update msg model =
 
                 Playing _ ->
                     let
+                        previousTimeSinceStart =
+                            getTimeSinceStart model.currentTime model.playState
+
                         timeSinceStart =
                             getTimeSinceStart currentTime model.playState
 
-                        cmdM =
-                            if timeSinceStart > 1000 && not model.played then
-                                Just <| playSound "xkcd"
+                        maybePlaySound =
+                            \dot ->
+                                let
+                                    period =
+                                        model.config.period / toFloat dot.periodMultiple
 
-                            else
-                                Nothing
+                                    prevPosition =
+                                        dotPosition period previousTimeSinceStart
+
+                                    curPosition =
+                                        dotPosition period timeSinceStart
+                                in
+                                if (prevPosition == 0 && curPosition > 0) || (prevPosition > curPosition) then
+                                    Just <| playSound (String.fromFloat dot.frequency)
+
+                                else
+                                    Nothing
+
+                        cmdMs =
+                            List.map maybePlaySound model.config.dots
+
+                        cmd =
+                            Cmd.batch <| List.filterMap identity cmdMs
                     in
-                    ( { model
-                        | currentTime = currentTime
-                        , played = Maybe.withDefault model.played <| Maybe.map (\_ -> True) cmdM
-                      }
-                    , Maybe.withDefault Cmd.none cmdM
-                    )
-
-        PlaySound s ->
-            ( { model | played = True }, playSound s )
+                    ( { model | currentTime = currentTime }, cmd )
 
 
 
@@ -152,6 +207,25 @@ dotCenter dp radius center =
     ( centerX + cosed * radius, centerY + sined * radius )
 
 
+dotPeriod =
+    3000
+
+
+renderDot : ( Float, Float ) -> Float -> Float -> Float -> Dot -> Shape
+renderDot baseCenter radius timeSinceStart basePeriod dot =
+    let
+        period =
+            basePeriod / toFloat dot.periodMultiple
+
+        position =
+            dotPosition period timeSinceStart
+
+        center =
+            dotCenter position radius baseCenter
+    in
+    circle center 10
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -160,12 +234,6 @@ view model =
 
         radius =
             160
-
-        dotRadius =
-            10
-
-        dotPeriod =
-            3000
 
         timeSinceStart =
             getTimeSinceStart model.currentTime model.playState
@@ -176,13 +244,16 @@ view model =
         dc =
             dotCenter dp radius center
 
+        dotList =
+            List.map (renderDot center radius timeSinceStart model.config.period) model.config.dots
+
         canvas =
             Canvas.toHtml
                 ( w, h )
                 []
                 [ shapes [ fill Color.white ] [ rect ( 0, 0 ) w h ]
                 , shapes [ stroke Color.black ] [ circle center radius ]
-                , shapes [ fill Color.blue ] [ circle dc dotRadius ]
+                , shapes [ fill Color.blue ] dotList
                 ]
     in
     div []
