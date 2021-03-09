@@ -12,32 +12,13 @@ import Color
 import Html exposing (Html, div)
 import Html.Attributes
 import Html.Events exposing (onClick)
+import Notes exposing (Note(..), Octave(..), freq)
 import PlayState exposing (PlayAction(..), PlayState, getTimeSinceStart)
 import Time exposing (Posix)
 
 
 
 ---- MODEL ----
-
-
-c5Freq =
-    523.2511306011972
-
-
-d5Freq =
-    587.3295358348151
-
-
-e5Freq =
-    659.2551138257398
-
-
-g5Freq =
-    783.9908719634985
-
-
-c6Freq =
-    1046.5022612023945
 
 
 type alias Dot =
@@ -55,10 +36,10 @@ type alias Config =
 simpleConfig : Config
 simpleConfig =
     { dots =
-        [ { frequency = c5Freq, periodMultiple = 1 }
-        , { frequency = e5Freq, periodMultiple = 2 }
-        , { frequency = g5Freq, periodMultiple = 3 }
-        , { frequency = c6Freq, periodMultiple = 4 }
+        [ { frequency = freq C Oct5, periodMultiple = 1 }
+        , { frequency = freq E Oct5, periodMultiple = 2 }
+        , { frequency = freq G Oct5, periodMultiple = 3 }
+        , { frequency = freq C Oct6, periodMultiple = 4 }
         ]
     , period = 3000
     }
