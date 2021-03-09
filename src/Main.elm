@@ -188,6 +188,7 @@ dotCenter dp radius center =
     ( centerX + cosed * radius, centerY + sined * radius )
 
 
+dotPeriod : number
 dotPeriod =
     3000
 
@@ -218,12 +219,6 @@ view model =
 
         timeSinceStart =
             getTimeSinceStart model.currentTime model.playState
-
-        dp =
-            dotPosition dotPeriod timeSinceStart
-
-        dc =
-            dotCenter dp radius center
 
         dotList =
             List.map (renderDot center radius timeSinceStart model.config.period) model.config.dots

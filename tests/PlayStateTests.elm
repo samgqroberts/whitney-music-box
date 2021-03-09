@@ -1,9 +1,7 @@
 module PlayStateTests exposing (..)
 
 import Expect exposing (FloatingPointTolerance(..))
-import Fuzz exposing (Fuzzer, float)
-import Main exposing (dotPosition)
-import PlayState exposing (PlayAction(..), PlayState, getTimeSinceStart)
+import PlayState exposing (PlayAction(..), getTimeSinceStart)
 import Test exposing (..)
 
 

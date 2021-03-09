@@ -1,18 +1,10 @@
 module PlayState exposing (PlayAction(..), PlayState, getTimeSinceStart, push)
 
-import Basics.Extra exposing (fractionalModBy)
-import Browser
-import Browser.Events exposing (onAnimationFrame)
 import Canvas exposing (..)
 import Canvas.Settings exposing (..)
 import Canvas.Settings.Advanced exposing (..)
 import Canvas.Settings.Line exposing (..)
 import Canvas.Settings.Text exposing (..)
-import Color
-import Html exposing (Html, div)
-import Html.Attributes
-import Html.Events exposing (onClick)
-import Time exposing (Posix)
 
 
 type PlayAction
