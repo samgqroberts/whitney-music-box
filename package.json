@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "build": "elm-app build"
+    "build": "elm-app build",
+    "start": "elm-app start",
+    "test": "elm-test"
   },
   "devDependencies": {
     "create-elm-app": "^5.22.0"
