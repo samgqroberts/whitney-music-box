@@ -9,6 +9,8 @@ import Canvas.Settings.Line exposing (..)
 import Canvas.Settings.Text exposing (..)
 import Color
 import Html exposing (Html, div)
+import Html.Attributes
+import Html.Events exposing (onClick)
 import Time exposing (Posix)
 
 
@@ -35,6 +37,7 @@ init _ =
 type Msg
     = AnimationFrame Posix
     | PlaySound String
+    | Start
 
 
 getTimeSinceStart : { a | currentTime : number, startTime : Maybe number } -> number
@@ -45,21 +48,16 @@ getTimeSinceStart { currentTime, startTime } =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Start ->
+            ( { model | startTime = Just model.currentTime, played = False }, Cmd.none )
+
         AnimationFrame t ->
             let
                 currentTime =
                     t |> Time.posixToMillis |> toFloat
 
-                startTime =
-                    case model.startTime of
-                        Just s ->
-                            Just s
-
-                        Nothing ->
-                            Just currentTime
-
                 timeSinceStart =
-                    getTimeSinceStart <| { currentTime = currentTime, startTime = startTime }
+                    getTimeSinceStart <| { currentTime = currentTime, startTime = model.startTime }
 
                 cmdM =
                     if timeSinceStart > 1000 && not model.played then
@@ -70,7 +68,6 @@ update msg model =
             in
             ( { model
                 | currentTime = currentTime
-                , startTime = startTime
                 , played = Maybe.withDefault model.played <| Maybe.map (\_ -> True) cmdM
               }
             , Maybe.withDefault Cmd.none cmdM
@@ -147,7 +144,7 @@ view model =
                 ]
     in
     div []
-        [ canvas ]
+        [ canvas, Html.button [ onClick Start, Html.Attributes.id "startButton" ] [ Html.text "start" ] ]
 
 
 
