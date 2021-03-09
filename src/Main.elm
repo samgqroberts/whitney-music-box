@@ -1,5 +1,6 @@
 port module Main exposing (..)
 
+import Basics.Extra exposing (fractionalModBy)
 import Browser
 import Browser.Events exposing (onAnimationFrame)
 import Canvas exposing (..)
@@ -28,6 +29,22 @@ type alias Model =
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { startTime = Nothing, currentTime = 0, played = False }, Cmd.none )
+
+
+{-| Convert a timeSinceStart value to the position of the dot along the circumference
+of the circle (in radians, modded by 2pi).
+
+period: the time it takes the dot to complete a revolution, in ms
+timeSinceStart: the time since the program was started, in ms
+
+-}
+dotPosition : Float -> Float -> Float
+dotPosition period timeSinceStart =
+    if period == 0 then
+        0
+
+    else
+        (fractionalModBy period timeSinceStart / period) * (2 * pi)
 
 
 
@@ -107,12 +124,24 @@ h =
     500
 
 
+dotCenter : Float -> Float -> ( Float, Float ) -> ( Float, Float )
+dotCenter dp radius center =
+    let
+        sined =
+            sin (dp - (pi / 2))
+
+        cosed =
+            cos (dp - (pi / 2))
+
+        ( centerX, centerY ) =
+            center
+    in
+    ( centerX + cosed * radius, centerY + sined * radius )
+
+
 view : Model -> Html Msg
 view model =
     let
-        timeSinceStart =
-            getTimeSinceStart model
-
         center =
             ( w / 2, h / 2 )
 
@@ -122,17 +151,11 @@ view model =
         dotRadius =
             10
 
-        t =
-            timeSinceStart / 1000
+        dp =
+            dotPosition 3000 <| getTimeSinceStart model
 
-        sined =
-            sin (t - (pi / 2))
-
-        cosed =
-            cos (t - (pi / 2))
-
-        dotCenter =
-            ( w / 2 + cosed * radius, h / 2 + sined * radius )
+        dc =
+            dotCenter dp radius center
 
         canvas =
             Canvas.toHtml
@@ -140,7 +163,7 @@ view model =
                 []
                 [ shapes [ fill Color.white ] [ rect ( 0, 0 ) w h ]
                 , shapes [ stroke Color.black ] [ circle center radius ]
-                , shapes [ fill Color.blue ] [ circle dotCenter dotRadius ]
+                , shapes [ fill Color.blue ] [ circle dc dotRadius ]
                 ]
     in
     div []
