@@ -12,14 +12,10 @@ const app = Elm.Main.init({
 serviceWorker.unregister();
 
 let audioContext;
-let masterGainNode;
 
 // due to web standards, cannot use AudioContext before some user gesture
 document.getElementById('startButton').addEventListener('click', () => {
   audioContext = new AudioContext();
-  masterGainNode = audioContext.createGain();
-  masterGainNode.connect(audioContext.destination);
-  masterGainNode.gain.value = 0.1;
 })
 
 const playSound = (message) => {
@@ -32,16 +28,20 @@ const playSound = (message) => {
     console.error('cannot play sound, given frequency is NaN:', message);
   }
   const osc = audioContext.createOscillator();
-  osc.connect(masterGainNode);
+  const gainNode = audioContext.createGain();
+  osc.connect(gainNode);
+  gainNode.connect(audioContext.destination);
   const sineTerms = new Float32Array([0, 0, 1, 0, 1]);
   const cosineTerms = new Float32Array(sineTerms.length);
   const waveform = audioContext.createPeriodicWave(cosineTerms, sineTerms);
   osc.setPeriodicWave(waveform)
   osc.frequency.value = frequency;
+  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 3.0);
   osc.start();
   setTimeout(() => {
     osc.stop();
-  }, 500);
+  }, 3000);
 };
 
 app.ports.playSound.subscribe((message) => {
