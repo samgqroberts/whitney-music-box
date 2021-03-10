@@ -18,20 +18,43 @@ document.getElementById('startButton').addEventListener('click', () => {
   audioContext = new AudioContext();
 })
 
+function parseMessage(message) {
+  const node = JSON.parse(message);
+  if (!node || typeof node !== 'object') {
+    console.error('cannot parse message, given message is not a json object:', message);
+    return undefined;
+  }
+  const frequency = parseFloat(node.frequency);
+  if (isNaN(frequency)) {
+    console.error('cannot play sound, given frequency is NaN:', message);
+    return undefined;
+  }
+  if (!Array.isArray(node.sineTerms)) {
+    console.error('cannot play sound, given sineTerms array is not an array:', message);
+    return undefined;
+  }
+  const sineTerms = node.sineTerms.map(parseFloat);
+  if (sineTerms.some(v => isNaN(v))) {
+    console.error('cannot play sound, give sineTerms array contains invalid values:', message);
+    return undefined;
+  }
+  return { frequency, sineTerms };
+}
+
 const playSound = (message) => {
   if (!audioContext) {
     console.error('cannot play sound, audio context not initialized');
     return;
   }
-  const frequency = parseFloat(message);
-  if (isNaN(frequency)) {
-    console.error('cannot play sound, given frequency is NaN:', message);
+  const parsedMessage = parseMessage(message);
+  if (!parsedMessage) {
+    return;
   }
+  const { frequency, sineTerms } = parsedMessage;
   const osc = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
   osc.connect(gainNode);
   gainNode.connect(audioContext.destination);
-  const sineTerms = new Float32Array([0, 0, 1, 0, 1]);
   const cosineTerms = new Float32Array(sineTerms.length);
   const waveform = audioContext.createPeriodicWave(cosineTerms, sineTerms);
   osc.setPeriodicWave(waveform)

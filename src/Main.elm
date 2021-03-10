@@ -12,6 +12,7 @@ import Color
 import Html exposing (Html, div)
 import Html.Attributes
 import Html.Events exposing (onClick)
+import Json.Encode
 import Notes exposing (Note(..), Octave(..), freq)
 import PlayState exposing (PlayAction(..), PlayState, getTimeSinceStart)
 import Time exposing (Posix)
@@ -30,6 +31,7 @@ type alias Dot =
 type alias Config =
     { dots : List Dot
     , period : Float
+    , sineTerms : List Float
     }
 
 
@@ -66,6 +68,7 @@ simpleConfig =
             , freq C Oct5
             ]
     , period = 16000
+    , sineTerms = [ 0, 0, 1, 0, 1 ]
     }
 
 
@@ -153,7 +156,7 @@ update msg model =
                                         dotPosition period timeSinceStart
                                 in
                                 if (prevPosition == 0 && curPosition > 0) || (prevPosition > curPosition) then
-                                    Just <| playSound (String.fromFloat dot.frequency)
+                                    Just <| playSoundF model.config.sineTerms dot.frequency
 
                                 else
                                     Nothing
@@ -181,6 +184,16 @@ subscriptions _ =
 
 
 port playSound : String -> Cmd msg
+
+
+playSoundF : List Float -> Float -> Cmd msg
+playSoundF sineTerms frequency =
+    [ ( "frequency", Json.Encode.float frequency )
+    , ( "sineTerms", Json.Encode.list Json.Encode.float sineTerms )
+    ]
+        |> Json.Encode.object
+        |> Json.Encode.encode 0
+        |> playSound
 
 
 
