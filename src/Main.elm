@@ -36,12 +36,18 @@ type alias Config =
 simpleConfig : Config
 simpleConfig =
     { dots =
-        [ { frequency = freq C Oct5, ordinal = 1 }
-        , { frequency = freq E Oct5, ordinal = 2 }
-        , { frequency = freq G Oct5, ordinal = 3 }
-        , { frequency = freq C Oct6, ordinal = 4 }
+        [ { frequency = freq C Oct2, ordinal = 1 }
+        , { frequency = freq E Oct2, ordinal = 2 }
+        , { frequency = freq G Oct2, ordinal = 3 }
+        , { frequency = freq C Oct3, ordinal = 4 }
+        , { frequency = freq E Oct3, ordinal = 5 }
+        , { frequency = freq G Oct3, ordinal = 6 }
+        , { frequency = freq C Oct4, ordinal = 7 }
+        , { frequency = freq E Oct4, ordinal = 8 }
+        , { frequency = freq G Oct4, ordinal = 9 }
+        , { frequency = freq C Oct5, ordinal = 10 }
         ]
-    , period = 3000
+    , period = 8000
     }
 
 
