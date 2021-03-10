@@ -33,21 +33,39 @@ type alias Config =
     }
 
 
+linearOrdinals : List Float -> List Dot
+linearOrdinals frequencies =
+    List.indexedMap (\ordinal frequency -> { frequency = frequency, ordinal = ordinal }) frequencies
+
+
 simpleConfig : Config
 simpleConfig =
     { dots =
-        [ { frequency = freq C Oct2, ordinal = 1 }
-        , { frequency = freq E Oct2, ordinal = 2 }
-        , { frequency = freq G Oct2, ordinal = 3 }
-        , { frequency = freq C Oct3, ordinal = 4 }
-        , { frequency = freq E Oct3, ordinal = 5 }
-        , { frequency = freq G Oct3, ordinal = 6 }
-        , { frequency = freq C Oct4, ordinal = 7 }
-        , { frequency = freq E Oct4, ordinal = 8 }
-        , { frequency = freq G Oct4, ordinal = 9 }
-        , { frequency = freq C Oct5, ordinal = 10 }
-        ]
-    , period = 8000
+        linearOrdinals
+            [ freq C Oct2
+            , freq D Oct2
+            , freq E Oct2
+            , freq F Oct2
+            , freq G Oct2
+            , freq A Oct2
+            , freq B Oct2
+            , freq C Oct3
+            , freq D Oct3
+            , freq E Oct3
+            , freq F Oct3
+            , freq G Oct3
+            , freq A Oct3
+            , freq B Oct3
+            , freq C Oct4
+            , freq D Oct4
+            , freq E Oct4
+            , freq F Oct4
+            , freq G Oct4
+            , freq A Oct4
+            , freq B Oct4
+            , freq C Oct5
+            ]
+    , period = 16000
     }
 
 
@@ -239,7 +257,7 @@ view model =
             ( w / 2, h / 2 )
 
         radius =
-            160
+            240
 
         timeSinceStart =
             getTimeSinceStart model.currentTime model.playState
