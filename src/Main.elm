@@ -23,7 +23,7 @@ import Time exposing (Posix)
 
 type alias Dot =
     { frequency : Float
-    , periodMultiple : Int
+    , ordinal : Int
     }
 
 
@@ -36,10 +36,10 @@ type alias Config =
 simpleConfig : Config
 simpleConfig =
     { dots =
-        [ { frequency = freq C Oct5, periodMultiple = 1 }
-        , { frequency = freq E Oct5, periodMultiple = 2 }
-        , { frequency = freq G Oct5, periodMultiple = 3 }
-        , { frequency = freq C Oct6, periodMultiple = 4 }
+        [ { frequency = freq C Oct5, ordinal = 1 }
+        , { frequency = freq E Oct5, ordinal = 2 }
+        , { frequency = freq G Oct5, ordinal = 3 }
+        , { frequency = freq C Oct6, ordinal = 4 }
         ]
     , period = 3000
     }
@@ -120,7 +120,7 @@ update msg model =
                             \dot ->
                                 let
                                     period =
-                                        model.config.period / toFloat dot.periodMultiple
+                                        model.config.period / toFloat dot.ordinal
 
                                     prevPosition =
                                         dotPosition period previousTimeSinceStart
@@ -177,10 +177,10 @@ dotCenter : Float -> Float -> ( Float, Float ) -> ( Float, Float )
 dotCenter dp radius center =
     let
         sined =
-            sin (dp - (pi / 2))
+            sin dp
 
         cosed =
-            cos (dp - (pi / 2))
+            cos dp
 
         ( centerX, centerY ) =
             center
@@ -193,19 +193,37 @@ dotPeriod =
     3000
 
 
-renderDot : ( Float, Float ) -> Float -> Float -> Float -> Dot -> Shape
-renderDot baseCenter radius timeSinceStart basePeriod dot =
+renderDot : ( Float, Float ) -> Float -> Float -> Int -> Float -> Dot -> Shape
+renderDot baseCenter baseRadius basePeriod largestOrdinal timeSinceStart dot =
     let
         period =
-            basePeriod / toFloat dot.periodMultiple
+            basePeriod / toFloat dot.ordinal
 
         position =
             dotPosition period timeSinceStart
 
+        largestSizeRadius =
+            toFloat 10
+
+        smallestSizeRadius =
+            toFloat 3
+
+        ordinalRatio =
+            toFloat (dot.ordinal - 1) / toFloat (largestOrdinal - 1)
+
+        dotSizeRadius =
+            largestSizeRadius - ordinalRatio * (largestSizeRadius - smallestSizeRadius)
+
+        smallestPositionRadius =
+            toFloat 5
+
+        dotPositionRadius =
+            baseRadius - ordinalRatio * (baseRadius - smallestPositionRadius)
+
         center =
-            dotCenter position radius baseCenter
+            dotCenter position dotPositionRadius baseCenter
     in
-    circle center 10
+    circle center dotSizeRadius
 
 
 view : Model -> Html Msg
@@ -220,15 +238,21 @@ view model =
         timeSinceStart =
             getTimeSinceStart model.currentTime model.playState
 
+        largestOrdinal =
+            Maybe.withDefault 1 <| List.maximum (List.map (\x -> x.ordinal) model.config.dots)
+
         dotList =
-            List.map (renderDot center radius timeSinceStart model.config.period) model.config.dots
+            List.map (renderDot center radius model.config.period largestOrdinal timeSinceStart) model.config.dots
 
         canvas =
             Canvas.toHtml
                 ( w, h )
                 []
                 [ shapes [ fill Color.white ] [ rect ( 0, 0 ) w h ]
-                , shapes [ stroke Color.black ] [ circle center radius ]
+                , shapes
+                    [ stroke Color.black ]
+                    [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + radius) center) ]
+                    ]
                 , shapes [ fill Color.blue ] dotList
                 ]
     in
