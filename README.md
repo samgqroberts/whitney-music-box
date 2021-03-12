@@ -1,4 +1,4 @@
-# musicbox (in development)
+# Whitney Music Box (in development)
 
 A re-creation of [Jim Bumgardner](https://krazydad.com/about.php)'s [Whitney Music Box](http://whitneymusicbox.org/) in Elm
 
