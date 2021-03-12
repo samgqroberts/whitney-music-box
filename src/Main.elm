@@ -9,7 +9,7 @@ import Canvas.Settings.Advanced exposing (..)
 import Canvas.Settings.Line exposing (..)
 import Canvas.Settings.Text exposing (..)
 import Color
-import Html exposing (Html, div)
+import Html exposing (Html, div, p)
 import Html.Attributes
 import Html.Events exposing (onClick)
 import Json.Encode
@@ -201,16 +201,6 @@ playSoundF sineTerms frequency =
 ---- VIEW ----
 
 
-w : number
-w =
-    500
-
-
-h : number
-h =
-    500
-
-
 dotCenter : Float -> Float -> ( Float, Float ) -> ( Float, Float )
 dotCenter dp radius center =
     let
@@ -300,11 +290,20 @@ renderDot baseCenter baseRadius basePeriod largestOrdinal timeSinceStart dot =
 view : Model -> Html Msg
 view model =
     let
-        center =
-            ( w / 2, h / 2 )
+        baseRadius =
+            250
 
-        radius =
-            240
+        padding =
+            10
+
+        center =
+            ( baseRadius + padding / 2, baseRadius + padding / 2 )
+
+        w =
+            baseRadius * 2 + padding * 2
+
+        h =
+            baseRadius * 2 + padding * 2
 
         timeSinceStart =
             getTimeSinceStart model.currentTime model.playState
@@ -313,7 +312,7 @@ view model =
             Maybe.withDefault 1 <| List.maximum (List.map (\x -> x.ordinal) model.config.dots)
 
         dotList =
-            List.map (renderDot center radius model.config.period largestOrdinal timeSinceStart) model.config.dots
+            List.map (renderDot center baseRadius model.config.period largestOrdinal timeSinceStart) model.config.dots
 
         canvas =
             Canvas.toHtml
@@ -322,14 +321,30 @@ view model =
                 [ shapes [ fill Color.white ] [ rect ( 0, 0 ) w h ]
                 , shapes
                     [ stroke Color.black ]
-                    [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + radius) center) ]
+                    [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ]
                     ]
                 , shapes [ fill Color.blue ] dotList
                 ]
     in
     div []
-        [ canvas
-        , Html.button [ onClick Start, Html.Attributes.id "startButton" ] [ Html.text "start" ]
+        [ description
+        , canvas
+        , buttonToolbar
+        ]
+
+
+description : Html Msg
+description =
+    div []
+        [ p [] [ Html.text "The Whitney Music Box was originally devised and implemented by Jim Bumgardner." ]
+        , p [] [ Html.text "Each dot revolves at some whole-number multiple of the speed of the outermost dot. Eg. The outermost dot may complete a revolution in 32 seconds, the next will complete a revolution in 16 seconds, the next 8, etc." ]
+        ]
+
+
+buttonToolbar : Html Msg
+buttonToolbar =
+    div []
+        [ Html.button [ onClick Start, Html.Attributes.id "startButton" ] [ Html.text "start" ]
         , Html.button [ onClick Stop ] [ Html.text "stop" ]
         , Html.button [ onClick Pause ] [ Html.text "pause" ]
         ]
