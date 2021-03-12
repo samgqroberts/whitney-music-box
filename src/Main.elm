@@ -9,7 +9,7 @@ import Canvas.Settings.Advanced exposing (..)
 import Canvas.Settings.Line exposing (..)
 import Canvas.Settings.Text exposing (..)
 import Color
-import Html exposing (Html, div, p)
+import Html exposing (Html, a, button, div, li, p, ul)
 import Html.Attributes
 import Html.Events exposing (onClick)
 import Json.Encode
@@ -29,8 +29,20 @@ type alias Dot =
     }
 
 
+type ConfigMetadata
+    = ConfigMetadata String
+
+
+configName : Config -> String
+configName c =
+    case c.metadata of
+        ConfigMetadata name ->
+            name
+
+
 type alias Config =
-    { dots : List Dot
+    { metadata : ConfigMetadata
+    , dots : List Dot
     , period : Float
     , sineTerms : List Float
     }
@@ -41,9 +53,10 @@ linearOrdinals frequencies =
     List.indexedMap (\ordinal frequency -> { frequency = frequency, ordinal = ordinal }) frequencies
 
 
-simpleConfig : Config
-simpleConfig =
-    { dots =
+cMajor3OctConfig : Config
+cMajor3OctConfig =
+    { metadata = ConfigMetadata "C Major over 3 octaves"
+    , dots =
         linearOrdinals
             [ freq C Oct2
             , freq D Oct2
@@ -68,9 +81,69 @@ simpleConfig =
             , freq B Oct4
             , freq C Oct5
             ]
-    , period = 16000
+    , period = 24000
     , sineTerms = [ 0, 0, 1, 0, 1 ]
     }
+
+
+chromatic4OctConfig : Config
+chromatic4OctConfig =
+    { metadata = ConfigMetadata "Chromatic scale over 4 octaves"
+    , dots =
+        linearOrdinals
+            [ freq A Oct2
+            , freq Ashp Oct2
+            , freq B Oct2
+            , freq C Oct2
+            , freq D Oct2
+            , freq Dshp Oct2
+            , freq E Oct2
+            , freq F Oct2
+            , freq Fshp Oct2
+            , freq G Oct2
+            , freq Gshp Oct2
+            , freq A Oct3
+            , freq Ashp Oct3
+            , freq B Oct3
+            , freq C Oct3
+            , freq D Oct3
+            , freq Dshp Oct3
+            , freq E Oct3
+            , freq F Oct3
+            , freq Fshp Oct3
+            , freq G Oct3
+            , freq Gshp Oct3
+            , freq A Oct4
+            , freq Ashp Oct4
+            , freq B Oct4
+            , freq C Oct4
+            , freq D Oct4
+            , freq Dshp Oct4
+            , freq E Oct4
+            , freq F Oct4
+            , freq Fshp Oct4
+            , freq G Oct4
+            , freq Gshp Oct4
+            , freq A Oct5
+            , freq Ashp Oct5
+            , freq B Oct5
+            , freq C Oct5
+            , freq D Oct5
+            , freq Dshp Oct5
+            , freq E Oct5
+            , freq F Oct5
+            , freq Fshp Oct5
+            , freq G Oct5
+            , freq Gshp Oct5
+            ]
+    , period = 32000
+    , sineTerms = [ 0, 0, 1, 0, 1 ]
+    }
+
+
+presets : List Config
+presets =
+    [ cMajor3OctConfig, chromatic4OctConfig ]
 
 
 type alias Model =
@@ -80,9 +153,14 @@ type alias Model =
     }
 
 
+emptyPlayState : PlayState
+emptyPlayState =
+    { current = Stopped, history = [] }
+
+
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { playState = { current = Stopped, history = [] }, currentTime = 0, config = simpleConfig }, Cmd.none )
+    ( { playState = emptyPlayState, currentTime = 0, config = cMajor3OctConfig }, Cmd.none )
 
 
 {-| Convert a timeSinceStart value to the position of the dot along the circumference
@@ -110,6 +188,7 @@ type Msg
     | Start
     | Stop
     | Pause
+    | SetConfig Config
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -123,6 +202,9 @@ update msg model =
 
         Pause ->
             ( { model | playState = PlayState.push (Paused model.currentTime) model.playState }, Cmd.none )
+
+        SetConfig c ->
+            ( { model | config = c, playState = emptyPlayState }, Cmd.none )
 
         AnimationFrame currentPosix ->
             let
@@ -328,8 +410,31 @@ view model =
     in
     div []
         [ description
-        , canvas
+        , div
+            [ Html.Attributes.style "display" "flex"
+            , Html.Attributes.style "justify-content" "space-around"
+            ]
+            [ configControls, canvas, information model.config ]
         , buttonToolbar
+        ]
+
+
+renderConfigControl : Config -> Html Msg
+renderConfigControl c =
+    li [ Html.Attributes.style "margin" "10px 0" ] [ button [ onClick <| SetConfig c ] [ Html.text <| configName c ] ]
+
+
+configControls : Html Msg
+configControls =
+    List.map renderConfigControl presets
+        |> ul [ Html.Attributes.style "list-style" "none" ]
+
+
+information : Config -> Html Msg
+information c =
+    ul []
+        [ li [] [ Html.text <| "Base Period: " ++ String.fromFloat (c.period / 1000) ++ "s" ]
+        , li [] [ Html.text <| "Num Dots: " ++ String.fromInt (List.length c.dots) ]
         ]
 
 
