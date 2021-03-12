@@ -13,6 +13,7 @@ import Html exposing (Html, div)
 import Html.Attributes
 import Html.Events exposing (onClick)
 import Json.Encode
+import List
 import Notes exposing (Note(..), Octave(..), freq)
 import PlayState exposing (PlayAction(..), PlayState, getTimeSinceStart)
 import Time exposing (Posix)
@@ -230,6 +231,42 @@ dotPeriod =
     3000
 
 
+getDotSizeRadius : Float -> Float -> Int -> Int -> Float
+getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal ordinal =
+    let
+        ordinalRatio =
+            toFloat (ordinal - 1) / toFloat (largestOrdinal - 1)
+    in
+    largestSizeRadius - ordinalRatio * (largestSizeRadius - smallestSizeRadius)
+
+
+getSpaceBetweenDots : Float -> Float -> Float -> Int -> Float
+getSpaceBetweenDots baseRadius largestSizeRadius smallestSizeRadius largestOrdinal =
+    let
+        summed =
+            List.range 1 largestOrdinal
+                |> List.map (getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal)
+                |> List.map (\x -> x * 2)
+                |> List.sum
+    in
+    (baseRadius - summed) / (toFloat largestOrdinal - 1)
+
+
+getDotPositionRadius : Float -> Float -> Float -> Float -> Int -> Int -> Float
+getDotPositionRadius baseRadius spaceBetweenDots largestSizeRadius smallestSizeRadius largestOrdinal ordinal =
+    let
+        summed =
+            List.range 1 ordinal
+                |> List.map (getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal)
+                |> List.map (\x -> x * 2)
+                |> List.sum
+
+        thisSizeRadius =
+            getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal ordinal
+    in
+    (baseRadius - (spaceBetweenDots * toFloat ordinal)) - summed + thisSizeRadius
+
+
 renderDot : ( Float, Float ) -> Float -> Float -> Int -> Float -> Dot -> Shape
 renderDot baseCenter baseRadius basePeriod largestOrdinal timeSinceStart dot =
     let
@@ -245,17 +282,14 @@ renderDot baseCenter baseRadius basePeriod largestOrdinal timeSinceStart dot =
         smallestSizeRadius =
             toFloat 3
 
-        ordinalRatio =
-            toFloat (dot.ordinal - 1) / toFloat (largestOrdinal - 1)
-
         dotSizeRadius =
-            largestSizeRadius - ordinalRatio * (largestSizeRadius - smallestSizeRadius)
+            getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal dot.ordinal
 
-        smallestPositionRadius =
-            toFloat 5
+        spaceBetweenDots =
+            getSpaceBetweenDots baseRadius largestSizeRadius smallestSizeRadius largestOrdinal
 
         dotPositionRadius =
-            baseRadius - ordinalRatio * (baseRadius - smallestPositionRadius)
+            getDotPositionRadius baseRadius spaceBetweenDots largestSizeRadius smallestSizeRadius largestOrdinal dot.ordinal
 
         center =
             dotCenter position dotPositionRadius baseCenter
