@@ -359,7 +359,7 @@ getDotPositionRadius baseRadius spaceBetweenDots largestSizeRadius smallestSizeR
     (baseRadius - (spaceBetweenDots * toFloat ordinal)) - summed + thisSizeRadius
 
 
-renderDot : ( Float, Float ) -> Float -> Float -> Float -> Float -> Int -> Float -> Dot -> Shape
+renderDot : ( Float, Float ) -> Float -> Float -> Float -> Float -> Int -> Float -> Dot -> Renderable
 renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart dot =
     let
         period =
@@ -379,8 +379,32 @@ renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius 
 
         center =
             dotCenter position dotPositionRadius baseCenter
+
+        colorGradient =
+            \blue red -> blue + ((red - blue) * toFloat dot.ordinal) / toFloat largestOrdinal
+
+        redR =
+            204 / 255
+
+        redG =
+            0 / 255
+
+        redB =
+            0 / 255
+
+        blueR =
+            62 / 255
+
+        blueG =
+            111 / 255
+
+        blueB =
+            240 / 255
+
+        color =
+            rgba (colorGradient blueR redR) (colorGradient blueG redG) (colorGradient blueB redB) 1.0
     in
-    circle center dotSizeRadius
+    shapes [ fill color ] [ circle center dotSizeRadius ]
 
 
 renderCanvas : Float -> Float -> Float -> PlayState -> List Dot -> Float -> Float -> Float -> Html Msg
@@ -401,17 +425,17 @@ renderCanvas baseRadius padding currentTime playState dots period largestSizeRad
         largestOrdinal =
             Maybe.withDefault 1 <| List.maximum (List.map (\x -> x.ordinal) dots)
 
-        dotList =
+        dotRenderables =
             List.map (renderDot center baseRadius period largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart) dots
 
         bg =
             canvasBackground width height
 
-        fg =
-            [ shapes [ stroke Color.black ] [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ] ], shapes [ fill Color.blue ] dotList ]
+        line =
+            shapes [ stroke Color.black ] [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ] ]
 
         renderables =
-            List.append bg fg
+            List.concat [ bg, [ line ], dotRenderables ]
     in
     Canvas.toHtml
         ( round width, round height )
