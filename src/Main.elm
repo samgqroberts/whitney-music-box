@@ -383,52 +383,51 @@ renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius 
     circle center dotSizeRadius
 
 
-view : Model -> Html Msg
-view model =
+renderCanvas : Float -> Float -> Float -> PlayState -> List Dot -> Float -> Float -> Float -> Html Msg
+renderCanvas baseRadius padding currentTime playState dots period largestSizeRadius smallestSizeRadius =
     let
-        baseRadius =
-            model.appConfig.baseRadius
-
-        padding =
-            model.appConfig.padding
-
         center =
             ( baseRadius + padding / 2, baseRadius + padding / 2 )
 
-        w =
+        width =
             baseRadius * 2 + padding * 2
 
-        h =
+        height =
             baseRadius * 2 + padding * 2
 
         timeSinceStart =
-            getTimeSinceStart model.currentTime model.playState
+            getTimeSinceStart currentTime playState
 
         largestOrdinal =
-            Maybe.withDefault 1 <| List.maximum (List.map (\x -> x.ordinal) model.config.dots)
+            Maybe.withDefault 1 <| List.maximum (List.map (\x -> x.ordinal) dots)
 
         dotList =
-            List.map (renderDot center baseRadius model.config.period model.appConfig.largestSizeRadius model.appConfig.smallestSizeRadius largestOrdinal timeSinceStart) model.config.dots
-
-        canvas =
-            Canvas.toHtml
-                ( round w, round h )
-                []
-                [ shapes [ fill Color.white ] [ rect ( 0, 0 ) w h ]
-                , shapes
-                    [ stroke Color.black ]
-                    [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ]
-                    ]
-                , shapes [ fill Color.blue ] dotList
-                ]
+            List.map (renderDot center baseRadius period largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart) dots
     in
+    Canvas.toHtml
+        ( round width, round height )
+        []
+        [ shapes [ fill Color.white ] [ rect ( 0, 0 ) width height ]
+        , shapes
+            [ stroke Color.black ]
+            [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ]
+            ]
+        , shapes [ fill Color.blue ] dotList
+        ]
+
+
+view : Model -> Html Msg
+view model =
     div []
         [ description
         , div
             [ Html.Attributes.style "display" "flex"
             , Html.Attributes.style "justify-content" "space-around"
             ]
-            [ configControls, canvas, information model.config ]
+            [ configControls
+            , renderCanvas model.appConfig.baseRadius model.appConfig.padding model.currentTime model.playState model.config.dots model.config.period model.appConfig.largestSizeRadius model.appConfig.smallestSizeRadius
+            , information model.config
+            ]
         , buttonToolbar
         ]
 
