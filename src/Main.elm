@@ -327,38 +327,55 @@ getDotSizeRadius : Float -> Float -> Int -> Int -> Float
 getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal ordinal =
     let
         ordinalRatio =
-            toFloat (ordinal - 1) / toFloat (largestOrdinal - 1)
+            (1 - (toFloat (ordinal - 1) / toFloat (largestOrdinal - 1))) ^ 2
     in
-    largestSizeRadius - ordinalRatio * (largestSizeRadius - smallestSizeRadius)
+    smallestSizeRadius
+        + (largestSizeRadius - smallestSizeRadius)
+        * ordinalRatio
 
 
 getSpaceBetweenDots : Float -> Float -> Float -> Int -> Float
 getSpaceBetweenDots baseRadius largestSizeRadius smallestSizeRadius largestOrdinal =
     let
+        innerPadding =
+            10
+
         summed =
             List.range 1 largestOrdinal
                 |> List.map (getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal)
                 |> List.map (\x -> x * 2)
                 |> List.sum
+
+        spaceBetweenDots =
+            (baseRadius - innerPadding - summed) / (toFloat largestOrdinal - 1)
     in
-    (baseRadius - summed) / (toFloat largestOrdinal - 1)
+    spaceBetweenDots
 
 
-getDotPositionRadius : Float -> Float -> Float -> Float -> Int -> Int -> Float
-getDotPositionRadius baseRadius spaceBetweenDots largestSizeRadius smallestSizeRadius largestOrdinal ordinal =
+getDotPositionRadius : Float -> Float -> Float -> Int -> Int -> Float
+getDotPositionRadius baseRadius largestSizeRadius smallestSizeRadius largestOrdinal ordinal =
     let
-        summed =
-            List.range 1 ordinal
+        spaceBetweenDots =
+            getSpaceBetweenDots baseRadius largestSizeRadius smallestSizeRadius largestOrdinal
+
+        largerDotDiametersSummed =
+            List.range 1 (ordinal - 1)
                 |> List.map (getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal)
                 |> List.map (\x -> x * 2)
                 |> List.sum
 
         thisSizeRadius =
             getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal ordinal
+
+        positionRadius =
+            (baseRadius - (spaceBetweenDots * (toFloat ordinal - 1))) - largerDotDiametersSummed - thisSizeRadius
     in
-    (baseRadius - (spaceBetweenDots * toFloat ordinal)) - summed + thisSizeRadius
+    positionRadius
 
 
+{-| TODO there is a bug here. if there are too many dots, and the space between dots becomes
+larger than the smallest dot's diameter, the inner dots' radiuses will be broken.
+-}
 renderDot : ( Float, Float ) -> Float -> Float -> Float -> Float -> Int -> Float -> Dot -> Renderable
 renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart dot =
     let
@@ -371,11 +388,8 @@ renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius 
         dotSizeRadius =
             getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal dot.ordinal
 
-        spaceBetweenDots =
-            getSpaceBetweenDots baseRadius largestSizeRadius smallestSizeRadius largestOrdinal
-
         dotPositionRadius =
-            getDotPositionRadius baseRadius spaceBetweenDots largestSizeRadius smallestSizeRadius largestOrdinal dot.ordinal
+            getDotPositionRadius baseRadius largestSizeRadius smallestSizeRadius largestOrdinal dot.ordinal
 
         center =
             dotCenter position dotPositionRadius baseCenter
@@ -445,7 +459,7 @@ renderCanvas baseRadius padding currentTime playState dots period largestSizeRad
             canvasBackground width height
 
         line =
-            shapes [ stroke Color.gray ] [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ] ]
+            shapes [ stroke Color.gray ] [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius + padding) center) ] ]
 
         renderables =
             List.concat [ bg, [ line ], dotRenderables ]
