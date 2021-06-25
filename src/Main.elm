@@ -58,7 +58,7 @@ type alias ScenarioConfig =
 
 linearOrdinals : List Float -> List Dot
 linearOrdinals frequencies =
-    List.indexedMap (\ordinal frequency -> { frequency = frequency, ordinal = ordinal }) frequencies
+    List.indexedMap (\ordinal frequency -> { frequency = frequency, ordinal = ordinal + 1 }) frequencies
 
 
 cMajor3OctConfig : ScenarioConfig
