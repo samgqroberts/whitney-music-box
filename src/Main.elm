@@ -23,6 +23,14 @@ import Time exposing (Posix)
 ---- MODEL ----
 
 
+type alias AppConfig =
+    { baseRadius : Float
+    , padding : Float
+    , smallestSizeRadius : Float
+    , largestSizeRadius : Float
+    }
+
+
 type alias Dot =
     { frequency : Float
     , ordinal : Int
@@ -33,14 +41,14 @@ type ConfigMetadata
     = ConfigMetadata String
 
 
-configName : Config -> String
+configName : ScenarioConfig -> String
 configName c =
     case c.metadata of
         ConfigMetadata name ->
             name
 
 
-type alias Config =
+type alias ScenarioConfig =
     { metadata : ConfigMetadata
     , dots : List Dot
     , period : Float
@@ -53,7 +61,7 @@ linearOrdinals frequencies =
     List.indexedMap (\ordinal frequency -> { frequency = frequency, ordinal = ordinal }) frequencies
 
 
-cMajor3OctConfig : Config
+cMajor3OctConfig : ScenarioConfig
 cMajor3OctConfig =
     { metadata = ConfigMetadata "C Major over 3 octaves"
     , dots =
@@ -86,7 +94,7 @@ cMajor3OctConfig =
     }
 
 
-chromatic4OctConfig : Config
+chromatic4OctConfig : ScenarioConfig
 chromatic4OctConfig =
     { metadata = ConfigMetadata "Chromatic scale over 4 octaves"
     , dots =
@@ -141,7 +149,7 @@ chromatic4OctConfig =
     }
 
 
-presets : List Config
+presets : List ScenarioConfig
 presets =
     [ cMajor3OctConfig, chromatic4OctConfig ]
 
@@ -149,7 +157,8 @@ presets =
 type alias Model =
     { playState : PlayState
     , currentTime : Float
-    , config : Config
+    , config : ScenarioConfig
+    , appConfig : AppConfig
     }
 
 
@@ -160,7 +169,18 @@ emptyPlayState =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { playState = emptyPlayState, currentTime = 0, config = cMajor3OctConfig }, Cmd.none )
+    ( { playState = emptyPlayState
+      , currentTime = 0
+      , config = cMajor3OctConfig
+      , appConfig =
+            { baseRadius = 250
+            , padding = 10
+            , largestSizeRadius = 10
+            , smallestSizeRadius = 3
+            }
+      }
+    , Cmd.none
+    )
 
 
 {-| Convert a timeSinceStart value to the position of the dot along the circumference
@@ -188,7 +208,7 @@ type Msg
     | Start
     | Stop
     | Pause
-    | SetConfig Config
+    | SetConfig ScenarioConfig
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -339,20 +359,14 @@ getDotPositionRadius baseRadius spaceBetweenDots largestSizeRadius smallestSizeR
     (baseRadius - (spaceBetweenDots * toFloat ordinal)) - summed + thisSizeRadius
 
 
-renderDot : ( Float, Float ) -> Float -> Float -> Int -> Float -> Dot -> Shape
-renderDot baseCenter baseRadius basePeriod largestOrdinal timeSinceStart dot =
+renderDot : ( Float, Float ) -> Float -> Float -> Float -> Float -> Int -> Float -> Dot -> Shape
+renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart dot =
     let
         period =
             basePeriod / toFloat dot.ordinal
 
         position =
             dotPosition period timeSinceStart
-
-        largestSizeRadius =
-            toFloat 10
-
-        smallestSizeRadius =
-            toFloat 3
 
         dotSizeRadius =
             getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal dot.ordinal
@@ -373,10 +387,10 @@ view : Model -> Html Msg
 view model =
     let
         baseRadius =
-            250
+            model.appConfig.baseRadius
 
         padding =
-            10
+            model.appConfig.padding
 
         center =
             ( baseRadius + padding / 2, baseRadius + padding / 2 )
@@ -394,11 +408,11 @@ view model =
             Maybe.withDefault 1 <| List.maximum (List.map (\x -> x.ordinal) model.config.dots)
 
         dotList =
-            List.map (renderDot center baseRadius model.config.period largestOrdinal timeSinceStart) model.config.dots
+            List.map (renderDot center baseRadius model.config.period model.appConfig.largestSizeRadius model.appConfig.smallestSizeRadius largestOrdinal timeSinceStart) model.config.dots
 
         canvas =
             Canvas.toHtml
-                ( w, h )
+                ( round w, round h )
                 []
                 [ shapes [ fill Color.white ] [ rect ( 0, 0 ) w h ]
                 , shapes
@@ -419,7 +433,7 @@ view model =
         ]
 
 
-renderConfigControl : Config -> Html Msg
+renderConfigControl : ScenarioConfig -> Html Msg
 renderConfigControl c =
     li [ Html.Attributes.style "margin" "10px 0" ] [ button [ onClick <| SetConfig c ] [ Html.text <| configName c ] ]
 
@@ -430,7 +444,7 @@ configControls =
         |> ul [ Html.Attributes.style "list-style" "none" ]
 
 
-information : Config -> Html Msg
+information : ScenarioConfig -> Html Msg
 information c =
     ul []
         [ li [] [ Html.text <| "Base Period: " ++ String.fromFloat (c.period / 1000) ++ "s" ]
