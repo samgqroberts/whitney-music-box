@@ -8,7 +8,7 @@ import Canvas.Settings exposing (..)
 import Canvas.Settings.Advanced exposing (..)
 import Canvas.Settings.Line exposing (..)
 import Canvas.Settings.Text exposing (..)
-import Color
+import Color exposing (rgba)
 import Html exposing (Html, a, button, div, li, p, ul)
 import Html.Attributes
 import Html.Events exposing (onClick)
@@ -387,7 +387,7 @@ renderCanvas : Float -> Float -> Float -> PlayState -> List Dot -> Float -> Floa
 renderCanvas baseRadius padding currentTime playState dots period largestSizeRadius smallestSizeRadius =
     let
         center =
-            ( baseRadius + padding / 2, baseRadius + padding / 2 )
+            ( baseRadius + padding, baseRadius + padding )
 
         width =
             baseRadius * 2 + padding * 2
@@ -403,17 +403,55 @@ renderCanvas baseRadius padding currentTime playState dots period largestSizeRad
 
         dotList =
             List.map (renderDot center baseRadius period largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart) dots
+
+        bg =
+            canvasBackground width height
+
+        fg =
+            [ shapes [ stroke Color.black ] [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ] ], shapes [ fill Color.blue ] dotList ]
+
+        renderables =
+            List.append bg fg
     in
     Canvas.toHtml
         ( round width, round height )
         []
-        [ shapes [ fill Color.white ] [ rect ( 0, 0 ) width height ]
-        , shapes
-            [ stroke Color.black ]
-            [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ]
-            ]
-        , shapes [ fill Color.blue ] dotList
-        ]
+        renderables
+
+
+canvasBackground : Float -> Float -> List Renderable
+canvasBackground width height =
+    let
+        smallerF =
+            min width height
+
+        smaller =
+            round smallerF
+
+        steps =
+            List.map toFloat <| List.range 0 smaller
+
+        minAlpha =
+            0.9
+
+        maxAlpha =
+            0.5
+
+        renderStep =
+            \step ->
+                let
+                    boxWidth =
+                        width * step / smallerF
+
+                    boxHeight =
+                        height * step / smallerF
+                in
+                shapes [ stroke (rgba 0 0 0 (minAlpha + ((maxAlpha - minAlpha) * step / smallerF))) ] [ rect ( (width - boxWidth) / 2, (height - boxHeight) / 2 ) boxWidth boxHeight ]
+
+        gradient =
+            List.map renderStep steps
+    in
+    shapes [ fill Color.white ] [ rect ( 0, 0 ) width height ] :: gradient
 
 
 view : Model -> Html Msg
