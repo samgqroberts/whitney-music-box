@@ -380,29 +380,42 @@ renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius 
         center =
             dotCenter position dotPositionRadius baseCenter
 
+        colorCompGradient =
+            \current max c1 c2 -> c1 + ((c2 - c1) * current) / max
+
         colorGradient =
-            \blue red -> blue + ((red - blue) * toFloat dot.ordinal) / toFloat largestOrdinal
+            \current max ( r1, g1, b1 ) ( r2, g2, b2 ) -> ( colorCompGradient current max r1 r2, colorCompGradient current max g1 g2, colorCompGradient current max b1 b2 )
 
-        redR =
-            204 / 255
+        blue =
+            ( 62 / 255, 111 / 255, 240 / 255 )
 
-        redG =
-            0 / 255
+        red =
+            ( 204 / 255, 0, 0 )
 
-        redB =
-            0 / 255
+        white =
+            ( 1, 1, 1 )
 
-        blueR =
-            62 / 255
+        baseColor =
+            colorGradient (toFloat dot.ordinal) (toFloat largestOrdinal) blue red
 
-        blueG =
-            111 / 255
+        proportionIntoPeriod =
+            fractionalModBy period timeSinceStart / period
 
-        blueB =
-            240 / 255
+        amountToWhiten =
+            if proportionIntoPeriod > 0.2 || proportionIntoPeriod < 0.00001 then
+                0
+
+            else
+                1 - (proportionIntoPeriod * 5)
+
+        whitenedColor =
+            colorGradient amountToWhiten 1 baseColor white
+
+        getColor =
+            \( r, g, b ) -> rgba r g b 1.0
 
         color =
-            rgba (colorGradient blueR redR) (colorGradient blueG redG) (colorGradient blueB redB) 1.0
+            getColor whitenedColor
     in
     shapes [ fill color ] [ circle center dotSizeRadius ]
 
@@ -432,7 +445,7 @@ renderCanvas baseRadius padding currentTime playState dots period largestSizeRad
             canvasBackground width height
 
         line =
-            shapes [ stroke Color.black ] [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ] ]
+            shapes [ stroke Color.gray ] [ Canvas.path center [ lineTo (Tuple.mapFirst (\x -> x + baseRadius) center) ] ]
 
         renderables =
             List.concat [ bg, [ line ], dotRenderables ]
