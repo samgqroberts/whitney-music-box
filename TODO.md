@@ -7,10 +7,12 @@ Todos:
     - removing all notes but the lowest note causes the drone and only the drone, at all times
     - could it be playing every frame? yep!
     - because the ordinal was 0. ordinals should start at 1
-- [ ] punch up visual style (button styling, padding)
-- [ ] make it look legit on mobile
 - [x] add a few more presets
-- [ ] host it
+- [x] host it
+- [ ] punch up visual style
+    - betterify preset button style
+    - make it look legit on mobile
+- [ ] figure how what / how to display for "Base Period: 24s" info section
 
 Looser thoughts:
 - [ ] flash the note being played ("C#") as that tone passes the line
@@ -19,3 +21,4 @@ Looser thoughts:
 - [ ] chain different note sequences together, changing the note sequences over time
 - [ ] user can control where in the playback it is
     - perhaps by grabbing and dragging one of the dots in the canvas
+- [ ] show information about the instrument (synthetic oscillator with these coefficients)
