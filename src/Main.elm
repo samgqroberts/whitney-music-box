@@ -696,7 +696,7 @@ information c =
 description : Html Msg
 description =
     div []
-        [ h1 [] [ Html.text "The Whitney Music Box" ]
+        [ h1 [] [ Html.text "Whitney Music Box" ]
         , p []
             [ Html.text "by "
             , Html.a [ Html.Attributes.href "https://samgqroberts.com/" ] [ Html.text "samgqroberts" ]
