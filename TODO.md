@@ -9,8 +9,11 @@ Todos:
     - because the ordinal was 0. ordinals should start at 1
 - [ ] punch up visual style (button styling, padding)
 - [ ] make it look legit on mobile
-- [ ] add a few more presets
+- [x] add a few more presets
+- [ ] host it
 
 Looser thoughts:
 - [ ] flash the note being played ("C#") as that tone passes the line
 - [ ] make everything that goes into a ScenarioConfig editable by the user
+- [ ] let people create their own note sequences
+- [ ] chain different note sequences together, changing the note sequences over time

@@ -15,7 +15,6 @@ import Html.Events exposing (onClick)
 import Json.Encode
 import List
 import Material.Icons as Filled
-import Material.Icons.Outlined as Outlined
 import Material.Icons.Types
 import Notes exposing (Note(..), Octave(..), freq)
 import PlayState exposing (PlayAction(..), PlayState, getTimeSinceStart)
@@ -67,7 +66,7 @@ linearOrdinals frequencies =
 
 cMajor3OctConfig : ScenarioConfig
 cMajor3OctConfig =
-    { metadata = ConfigMetadata "C Major over 3 octaves"
+    { metadata = ConfigMetadata "C Major scale over 3 octaves"
     , dots =
         linearOrdinals
             [ freq C Oct2
@@ -92,6 +91,97 @@ cMajor3OctConfig =
             , freq A Oct4
             , freq B Oct4
             , freq C Oct5
+            ]
+    , period = 24000
+    , sineTerms = [ 0, 0, 1, 0, 1 ]
+    }
+
+
+cMajorTriad5OctConfig : ScenarioConfig
+cMajorTriad5OctConfig =
+    { metadata = ConfigMetadata "C Major triad over 5 octaves"
+    , dots =
+        linearOrdinals
+            [ freq C Oct1
+            , freq E Oct1
+            , freq G Oct1
+            , freq C Oct2
+            , freq E Oct2
+            , freq G Oct2
+            , freq C Oct3
+            , freq E Oct3
+            , freq G Oct3
+            , freq C Oct4
+            , freq E Oct4
+            , freq G Oct4
+            , freq C Oct5
+            , freq E Oct5
+            , freq G Oct5
+            , freq C Oct6
+            ]
+    , period = 24000
+    , sineTerms = [ 0, 0, 1, 0, 1 ]
+    }
+
+
+gDom5OctConfig : ScenarioConfig
+gDom5OctConfig =
+    { metadata = ConfigMetadata "G dominant chord over 5 octaves"
+    , dots =
+        linearOrdinals
+            [ freq G Oct1
+            , freq B Oct1
+            , freq D Oct2
+            , freq F Oct2
+            , freq G Oct2
+            , freq B Oct2
+            , freq D Oct3
+            , freq F Oct3
+            , freq G Oct3
+            , freq B Oct3
+            , freq D Oct4
+            , freq F Oct4
+            , freq G Oct4
+            , freq B Oct4
+            , freq D Oct5
+            , freq F Oct5
+            , freq G Oct5
+            , freq B Oct5
+            , freq D Oct6
+            , freq F Oct6
+            , freq G Oct6
+            ]
+    , period = 24000
+    , sineTerms = [ 0, 0, 1, 0, 1 ]
+    }
+
+
+aMinor75OctConfig : ScenarioConfig
+aMinor75OctConfig =
+    { metadata = ConfigMetadata "A minor 7 chord over 5 octaves"
+    , dots =
+        linearOrdinals
+            [ freq A Oct1
+            , freq C Oct2
+            , freq E Oct2
+            , freq G Oct2
+            , freq A Oct2
+            , freq C Oct3
+            , freq E Oct3
+            , freq G Oct3
+            , freq A Oct3
+            , freq C Oct4
+            , freq E Oct4
+            , freq G Oct4
+            , freq A Oct4
+            , freq C Oct5
+            , freq E Oct5
+            , freq G Oct5
+            , freq A Oct5
+            , freq C Oct6
+            , freq E Oct6
+            , freq G Oct6
+            , freq A Oct6
             ]
     , period = 24000
     , sineTerms = [ 0, 0, 1, 0, 1 ]
@@ -153,9 +243,51 @@ chromatic4OctConfig =
     }
 
 
+wholeTone4OctConfig : ScenarioConfig
+wholeTone4OctConfig =
+    { metadata = ConfigMetadata "Whole tone scale over 4 octaves"
+    , dots =
+        linearOrdinals
+            [ freq C Oct2
+            , freq D Oct2
+            , freq E Oct2
+            , freq Fshp Oct2
+            , freq Gshp Oct2
+            , freq Ashp Oct2
+            , freq C Oct3
+            , freq D Oct3
+            , freq E Oct3
+            , freq Fshp Oct3
+            , freq Gshp Oct3
+            , freq Ashp Oct3
+            , freq C Oct4
+            , freq D Oct4
+            , freq E Oct4
+            , freq Fshp Oct4
+            , freq Gshp Oct4
+            , freq Ashp Oct4
+            , freq C Oct5
+            , freq D Oct5
+            , freq E Oct5
+            , freq Fshp Oct5
+            , freq Gshp Oct5
+            , freq Ashp Oct5
+            , freq C Oct6
+            ]
+    , period = 38000
+    , sineTerms = [ 0, 0, 1, 0, 1 ]
+    }
+
+
 presets : List ScenarioConfig
 presets =
-    [ cMajor3OctConfig, chromatic4OctConfig ]
+    [ cMajor3OctConfig
+    , cMajorTriad5OctConfig
+    , gDom5OctConfig
+    , aMinor75OctConfig
+    , chromatic4OctConfig
+    , wholeTone4OctConfig
+    ]
 
 
 type alias Model =
