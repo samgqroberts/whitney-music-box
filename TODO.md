@@ -8,6 +8,8 @@ Todos:
     - could it be playing every frame? yep!
     - because the ordinal was 0. ordinals should start at 1
 - [ ] punch up visual style (button styling, padding)
+- [ ] make it look legit on mobile
+- [ ] add a few more presets
 
 Looser thoughts:
 - [ ] flash the note being played ("C#") as that tone passes the line

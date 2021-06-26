@@ -9,11 +9,14 @@ import Canvas.Settings.Advanced exposing (..)
 import Canvas.Settings.Line exposing (..)
 import Canvas.Settings.Text exposing (..)
 import Color exposing (rgba)
-import Html exposing (Html, a, button, div, li, p, ul)
+import Html exposing (Html, a, div, li, p, ul)
 import Html.Attributes
 import Html.Events exposing (onClick)
 import Json.Encode
 import List
+import Material.Icons as Filled
+import Material.Icons.Outlined as Outlined
+import Material.Icons.Types
 import Notes exposing (Note(..), Octave(..), freq)
 import PlayState exposing (PlayAction(..), PlayState, getTimeSinceStart)
 import Time exposing (Posix)
@@ -26,6 +29,7 @@ import Time exposing (Posix)
 type alias AppConfig =
     { baseRadius : Float
     , padding : Float
+    , innerPadding : Float
     , smallestSizeRadius : Float
     , largestSizeRadius : Float
     }
@@ -144,7 +148,7 @@ chromatic4OctConfig =
             , freq G Oct5
             , freq Gshp Oct5
             ]
-    , period = 32000
+    , period = 42000
     , sineTerms = [ 0, 0, 1, 0, 1 ]
     }
 
@@ -174,9 +178,10 @@ init _ =
       , config = cMajor3OctConfig
       , appConfig =
             { baseRadius = 250
-            , padding = 10
-            , largestSizeRadius = 10
-            , smallestSizeRadius = 3
+            , padding = 5
+            , innerPadding = 5
+            , largestSizeRadius = 9
+            , smallestSizeRadius = 2
             }
       }
     , Cmd.none
@@ -334,12 +339,9 @@ getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal ordinal =
         * ordinalRatio
 
 
-getSpaceBetweenDots : Float -> Float -> Float -> Int -> Float
-getSpaceBetweenDots baseRadius largestSizeRadius smallestSizeRadius largestOrdinal =
+getSpaceBetweenDots : Float -> Float -> Float -> Float -> Int -> Float
+getSpaceBetweenDots baseRadius innerPadding largestSizeRadius smallestSizeRadius largestOrdinal =
     let
-        innerPadding =
-            10
-
         summed =
             List.range 1 largestOrdinal
                 |> List.map (getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal)
@@ -352,11 +354,11 @@ getSpaceBetweenDots baseRadius largestSizeRadius smallestSizeRadius largestOrdin
     spaceBetweenDots
 
 
-getDotPositionRadius : Float -> Float -> Float -> Int -> Int -> Float
-getDotPositionRadius baseRadius largestSizeRadius smallestSizeRadius largestOrdinal ordinal =
+getDotPositionRadius : Float -> Float -> Float -> Float -> Int -> Int -> Float
+getDotPositionRadius baseRadius innerPadding largestSizeRadius smallestSizeRadius largestOrdinal ordinal =
     let
         spaceBetweenDots =
-            getSpaceBetweenDots baseRadius largestSizeRadius smallestSizeRadius largestOrdinal
+            getSpaceBetweenDots baseRadius innerPadding largestSizeRadius smallestSizeRadius largestOrdinal
 
         largerDotDiametersSummed =
             List.range 1 (ordinal - 1)
@@ -376,8 +378,8 @@ getDotPositionRadius baseRadius largestSizeRadius smallestSizeRadius largestOrdi
 {-| TODO there is a bug here. if there are too many dots, and the space between dots becomes
 larger than the smallest dot's diameter, the inner dots' radiuses will be broken.
 -}
-renderDot : ( Float, Float ) -> Float -> Float -> Float -> Float -> Int -> Float -> Dot -> Renderable
-renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart dot =
+renderDot : ( Float, Float ) -> Float -> Float -> Float -> Float -> Float -> Int -> Float -> Dot -> Renderable
+renderDot baseCenter baseRadius innerPadding basePeriod largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart dot =
     let
         period =
             basePeriod / toFloat dot.ordinal
@@ -389,7 +391,7 @@ renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius 
             getDotSizeRadius largestSizeRadius smallestSizeRadius largestOrdinal dot.ordinal
 
         dotPositionRadius =
-            getDotPositionRadius baseRadius largestSizeRadius smallestSizeRadius largestOrdinal dot.ordinal
+            getDotPositionRadius baseRadius innerPadding largestSizeRadius smallestSizeRadius largestOrdinal dot.ordinal
 
         center =
             dotCenter position dotPositionRadius baseCenter
@@ -434,8 +436,8 @@ renderDot baseCenter baseRadius basePeriod largestSizeRadius smallestSizeRadius 
     shapes [ fill color ] [ circle center dotSizeRadius ]
 
 
-renderCanvas : Float -> Float -> Float -> PlayState -> List Dot -> Float -> Float -> Float -> Html Msg
-renderCanvas baseRadius padding currentTime playState dots period largestSizeRadius smallestSizeRadius =
+renderCanvas : Float -> Float -> Float -> Float -> PlayState -> List Dot -> Float -> Float -> Float -> Html Msg
+renderCanvas baseRadius padding innerPadding currentTime playState dots period largestSizeRadius smallestSizeRadius =
     let
         center =
             ( baseRadius + padding, baseRadius + padding )
@@ -453,7 +455,7 @@ renderCanvas baseRadius padding currentTime playState dots period largestSizeRad
             Maybe.withDefault 1 <| List.maximum (List.map (\x -> x.ordinal) dots)
 
         dotRenderables =
-            List.map (renderDot center baseRadius period largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart) dots
+            List.map (renderDot center baseRadius innerPadding period largestSizeRadius smallestSizeRadius largestOrdinal timeSinceStart) dots
 
         bg =
             canvasBackground width height
@@ -513,31 +515,51 @@ view model =
             [ Html.Attributes.style "display" "flex"
             , Html.Attributes.style "justify-content" "space-around"
             ]
-            [ configControls
-            , renderCanvas model.appConfig.baseRadius model.appConfig.padding model.currentTime model.playState model.config.dots model.config.period model.appConfig.largestSizeRadius model.appConfig.smallestSizeRadius
-            , information model.config
+            [ div [ Html.Attributes.style "flex" "1", Html.Attributes.style "padding" "10px" ] [ configControls ]
+            , div [ Html.Attributes.style "flex" "0" ] <|
+                [ renderCanvas model.appConfig.baseRadius model.appConfig.padding model.appConfig.innerPadding model.currentTime model.playState model.config.dots model.config.period model.appConfig.largestSizeRadius model.appConfig.smallestSizeRadius
+                , buttonToolbar
+                    (case model.playState.current of
+                        Playing _ ->
+                            True
+
+                        Paused _ ->
+                            False
+
+                        Stopped ->
+                            False
+                    )
+                ]
+            , div [ Html.Attributes.style "flex" "1", Html.Attributes.style "padding" "10px" ] [ information model.config ]
             ]
-        , buttonToolbar
         ]
 
 
 renderConfigControl : ScenarioConfig -> Html Msg
 renderConfigControl c =
-    li [ Html.Attributes.style "margin" "10px 0" ] [ button [ onClick <| SetConfig c ] [ Html.text <| configName c ] ]
+    li
+        [ Html.Attributes.style "margin" "10px 0"
+        , Html.Attributes.style "display" "flex"
+        , Html.Attributes.style "justify-content" "flex-end"
+        ]
+        [ Html.button [ onClick <| SetConfig c, Html.Attributes.style "cursor" "pointer" ] [ Html.text <| configName c ] ]
 
 
 configControls : Html Msg
 configControls =
     List.map renderConfigControl presets
-        |> ul [ Html.Attributes.style "list-style" "none" ]
+        |> ul
+            [ Html.Attributes.style "list-style" "none"
+            , Html.Attributes.style "padding" "0"
+            ]
 
 
 information : ScenarioConfig -> Html Msg
 information c =
-    ul []
-        [ li [] [ Html.text <| "Base Period: " ++ String.fromFloat (c.period / 1000) ++ "s" ]
-        , li [] [ Html.text <| "Num Dots: " ++ String.fromInt (List.length c.dots) ]
-        ]
+    ul [ Html.Attributes.style "padding" "0", Html.Attributes.style "list-style" "none" ] <|
+        List.map
+            (\text -> li [ Html.Attributes.style "display" "flex" ] [ Html.text text ])
+            [ "Base Period: " ++ String.fromFloat (c.period / 1000) ++ "s", "Num Dots: " ++ String.fromInt (List.length c.dots) ]
 
 
 description : Html Msg
@@ -548,12 +570,44 @@ description =
         ]
 
 
-buttonToolbar : Html Msg
-buttonToolbar =
+controlButton : List (Html.Attribute msg) -> List (Html msg) -> Html msg
+controlButton attributes children =
+    Html.button
+        (List.append attributes
+            [ Html.Attributes.style "padding" "0"
+            , Html.Attributes.style "line-height" "0"
+            , Html.Attributes.style "border" "0"
+            , Html.Attributes.style "background" "transparent"
+            , Html.Attributes.style "cursor" "pointer"
+            , Html.Attributes.style "margin" "5px"
+            ]
+        )
+        children
+
+
+buttonToolbar : Bool -> Html Msg
+buttonToolbar isPlaying =
     div []
-        [ Html.button [ onClick Start, Html.Attributes.id "startButton" ] [ Html.text "start" ]
-        , Html.button [ onClick Stop ] [ Html.text "stop" ]
-        , Html.button [ onClick Pause ] [ Html.text "pause" ]
+        [ controlButton
+            [ onClick
+                (if isPlaying then
+                    Pause
+
+                 else
+                    Start
+                )
+            , Html.Attributes.id "startButton"
+            ]
+            [ (if isPlaying then
+                Filled.pause
+
+               else
+                Filled.play_arrow
+              )
+                28
+                (Material.Icons.Types.Color <| rgba 0 0 0 0.9)
+            ]
+        , controlButton [ onClick Stop ] [ Filled.stop 28 (Material.Icons.Types.Color <| rgba 0 0 0 0.9) ]
         ]
 
 
