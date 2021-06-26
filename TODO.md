@@ -17,3 +17,5 @@ Looser thoughts:
 - [ ] make everything that goes into a ScenarioConfig editable by the user
 - [ ] let people create their own note sequences
 - [ ] chain different note sequences together, changing the note sequences over time
+- [ ] user can control where in the playback it is
+    - perhaps by grabbing and dragging one of the dots in the canvas

@@ -9,7 +9,7 @@ import Canvas.Settings.Advanced exposing (..)
 import Canvas.Settings.Line exposing (..)
 import Canvas.Settings.Text exposing (..)
 import Color exposing (rgba)
-import Html exposing (Html, a, div, li, p, ul)
+import Html exposing (Html, a, div, h1, li, p, ul)
 import Html.Attributes
 import Html.Events exposing (onClick)
 import Json.Encode
@@ -272,7 +272,6 @@ wholeTone4OctConfig =
             , freq Fshp Oct5
             , freq Gshp Oct5
             , freq Ashp Oct5
-            , freq C Oct6
             ]
     , period = 38000
     , sineTerms = [ 0, 0, 1, 0, 1 ]
@@ -697,8 +696,16 @@ information c =
 description : Html Msg
 description =
     div []
-        [ p [] [ Html.text "The Whitney Music Box was originally devised and implemented by Jim Bumgardner." ]
-        , p [] [ Html.text "Each dot revolves at some whole-number multiple of the speed of the outermost dot. Eg. The outermost dot may complete a revolution in 32 seconds, the next will complete a revolution in 16 seconds, the next 8, etc." ]
+        [ h1 [] [ Html.text "The Whitney Music Box" ]
+        , p []
+            [ Html.text "by "
+            , Html.a [ Html.Attributes.href "https://samgqroberts.com/" ] [ Html.text "samgqroberts" ]
+            ]
+        , p []
+            [ Html.text "Originally devised and implemented by "
+            , Html.a [ Html.Attributes.href "http://whitneymusicbox.org/" ] [ Html.text "Jim Bumgardner" ]
+            , Html.text "."
+            ]
         ]
 
 
