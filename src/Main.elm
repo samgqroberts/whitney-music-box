@@ -193,10 +193,7 @@ chromatic4OctConfig =
     { metadata = ConfigMetadata "Chromatic scale over 4 octaves"
     , dots =
         linearOrdinals
-            [ freq A Oct2
-            , freq Ashp Oct2
-            , freq B Oct2
-            , freq C Oct2
+            [ freq C Oct2
             , freq D Oct2
             , freq Dshp Oct2
             , freq E Oct2
@@ -204,9 +201,9 @@ chromatic4OctConfig =
             , freq Fshp Oct2
             , freq G Oct2
             , freq Gshp Oct2
-            , freq A Oct3
-            , freq Ashp Oct3
-            , freq B Oct3
+            , freq A Oct2
+            , freq Ashp Oct2
+            , freq B Oct2
             , freq C Oct3
             , freq D Oct3
             , freq Dshp Oct3
@@ -215,9 +212,9 @@ chromatic4OctConfig =
             , freq Fshp Oct3
             , freq G Oct3
             , freq Gshp Oct3
-            , freq A Oct4
-            , freq Ashp Oct4
-            , freq B Oct4
+            , freq A Oct3
+            , freq Ashp Oct3
+            , freq B Oct3
             , freq C Oct4
             , freq D Oct4
             , freq Dshp Oct4
@@ -226,9 +223,9 @@ chromatic4OctConfig =
             , freq Fshp Oct4
             , freq G Oct4
             , freq Gshp Oct4
-            , freq A Oct5
-            , freq Ashp Oct5
-            , freq B Oct5
+            , freq A Oct4
+            , freq Ashp Oct4
+            , freq B Oct4
             , freq C Oct5
             , freq D Oct5
             , freq Dshp Oct5
@@ -237,6 +234,9 @@ chromatic4OctConfig =
             , freq Fshp Oct5
             , freq G Oct5
             , freq Gshp Oct5
+            , freq A Oct5
+            , freq Ashp Oct5
+            , freq B Oct5
             ]
     , period = 42000
     , sineTerms = [ 0, 0, 1, 0, 1 ]

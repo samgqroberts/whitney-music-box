@@ -13,6 +13,7 @@ Todos:
     - betterify preset button style
     - make it look legit on mobile
 - [ ] figure how what / how to display for "Base Period: 24s" info section
+- [ ] licensing
 
 Looser thoughts:
 - [ ] flash the note being played ("C#") as that tone passes the line
