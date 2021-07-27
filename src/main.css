@@ -24,3 +24,14 @@ img {
   margin: 20px 0;
   max-width: 200px;
 }
+
+.config-control {
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.04s ease-in-out;
+}
+.config-control:hover {
+  background: lightblue;
+}

@@ -64,9 +64,9 @@ linearOrdinals frequencies =
     List.indexedMap (\ordinal frequency -> { frequency = frequency, ordinal = ordinal + 1 }) frequencies
 
 
-cMajor3OctConfig : ScenarioConfig
-cMajor3OctConfig =
-    { metadata = ConfigMetadata "C Major scale over 3 octaves"
+cMajor4OctConfig : ScenarioConfig
+cMajor4OctConfig =
+    { metadata = ConfigMetadata "C Major scale over 4 octaves"
     , dots =
         linearOrdinals
             [ freq C Oct2
@@ -91,8 +91,15 @@ cMajor3OctConfig =
             , freq A Oct4
             , freq B Oct4
             , freq C Oct5
+            , freq D Oct5
+            , freq E Oct5
+            , freq F Oct5
+            , freq G Oct5
+            , freq A Oct5
+            , freq B Oct5
+            , freq C Oct6
             ]
-    , period = 24000
+    , period = 38000
     , sineTerms = [ 0, 0, 1, 0, 1 ]
     }
 
@@ -151,7 +158,7 @@ gDom5OctConfig =
             , freq F Oct6
             , freq G Oct6
             ]
-    , period = 24000
+    , period = 30000
     , sineTerms = [ 0, 0, 1, 0, 1 ]
     }
 
@@ -280,7 +287,7 @@ wholeTone4OctConfig =
 
 presets : List ScenarioConfig
 presets =
-    [ cMajor3OctConfig
+    [ cMajor4OctConfig
     , cMajorTriad5OctConfig
     , gDom5OctConfig
     , aMinor75OctConfig
@@ -306,7 +313,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { playState = emptyPlayState
       , currentTime = 0
-      , config = cMajor3OctConfig
+      , config = cMajor4OctConfig
       , appConfig =
             { baseRadius = 250
             , padding = 5
@@ -643,25 +650,63 @@ view model =
     div []
         [ description
         , div
-            [ Html.Attributes.style "display" "flex"
-            , Html.Attributes.style "justify-content" "space-around"
+            [ Html.Attributes.style "margin" "20px auto"
+            , Html.Attributes.style "width" "fit-content"
             ]
-            [ div [ Html.Attributes.style "flex" "1", Html.Attributes.style "padding" "10px" ] [ configControls ]
-            , div [ Html.Attributes.style "flex" "0" ] <|
-                [ renderCanvas model.appConfig.baseRadius model.appConfig.padding model.appConfig.innerPadding model.currentTime model.playState model.config.dots model.config.period model.appConfig.largestSizeRadius model.appConfig.smallestSizeRadius
-                , buttonToolbar
-                    (case model.playState.current of
-                        Playing _ ->
-                            True
-
-                        Paused _ ->
-                            False
-
-                        Stopped ->
-                            False
-                    )
+            [ Html.hr
+                [ Html.Attributes.style "border" "0"
+                , Html.Attributes.style "border-bottom" "1px solid black"
+                , Html.Attributes.style "width" "65%"
                 ]
-            , div [ Html.Attributes.style "flex" "1", Html.Attributes.style "padding" "10px" ] [ information model.config ]
+                []
+            , div
+                [ Html.Attributes.style "display" "flex"
+                , Html.Attributes.style "justify-content" "center"
+                , Html.Attributes.style "margin" "20px auto"
+                , Html.Attributes.style "width" "fit-content"
+                ]
+                [ div [ Html.Attributes.style "flex" "0" ] <|
+                    [ renderCanvas model.appConfig.baseRadius model.appConfig.padding model.appConfig.innerPadding model.currentTime model.playState model.config.dots model.config.period model.appConfig.largestSizeRadius model.appConfig.smallestSizeRadius
+                    , buttonToolbar
+                        (case model.playState.current of
+                            Playing _ ->
+                                True
+
+                            Paused _ ->
+                                False
+
+                            Stopped ->
+                                False
+                        )
+                    ]
+                , div
+                    [ Html.Attributes.style "flex" "1"
+                    , Html.Attributes.style "padding" "0 20px"
+                    , Html.Attributes.style "max-width" "250px"
+                    , Html.Attributes.style "display" "flex"
+                    , Html.Attributes.style "flex-direction" "column"
+                    , Html.Attributes.style "justify-content" "center"
+                    ]
+                    [ configControls
+                    , Html.hr
+                        [ Html.Attributes.style "border" "0"
+                        , Html.Attributes.style "border-bottom" "2px solid lightgrey"
+                        , Html.Attributes.style "width" "65%"
+                        ]
+                        []
+                    , information model.config
+                    ]
+                ]
+            ]
+        , div
+            []
+            [ p [ Html.Attributes.style "font-size" "12px" ]
+                [ Html.text "Licensed under a "
+                , a [ Html.Attributes.href "https://creativecommons.org/licenses/by-nc-sa/3.0/" ]
+                    [ Html.text "Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License"
+                    , Html.text "."
+                    ]
+                ]
             ]
         ]
 
@@ -673,7 +718,12 @@ renderConfigControl c =
         , Html.Attributes.style "display" "flex"
         , Html.Attributes.style "justify-content" "flex-end"
         ]
-        [ Html.button [ onClick <| SetConfig c, Html.Attributes.style "cursor" "pointer" ] [ Html.text <| configName c ] ]
+        [ Html.button
+            [ Html.Attributes.class "config-control"
+            , onClick <| SetConfig c
+            ]
+            [ Html.text <| configName c ]
+        ]
 
 
 configControls : Html Msg
