@@ -688,13 +688,6 @@ view model =
                     , Html.Attributes.style "justify-content" "center"
                     ]
                     [ configControls
-                    , Html.hr
-                        [ Html.Attributes.style "border" "0"
-                        , Html.Attributes.style "border-bottom" "2px solid lightgrey"
-                        , Html.Attributes.style "width" "65%"
-                        ]
-                        []
-                    , information model.config
                     ]
                 ]
             ]
