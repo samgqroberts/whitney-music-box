@@ -541,10 +541,10 @@ renderDot baseCenter baseRadius innerPadding basePeriod largestSizeRadius smalle
             \current max ( r1, g1, b1 ) ( r2, g2, b2 ) -> ( colorCompGradient current max r1 r2, colorCompGradient current max g1 g2, colorCompGradient current max b1 b2 )
 
         blue =
-            ( 62 / 255, 111 / 255, 240 / 255 )
+            ( 72 / 255, 121 / 255, 250 / 255 )
 
         red =
-            ( 204 / 255, 0, 0 )
+            ( 255 / 255, 40 / 255, 40 / 255 )
 
         white =
             ( 1, 1, 1 )
