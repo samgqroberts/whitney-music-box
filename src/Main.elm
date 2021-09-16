@@ -2,6 +2,7 @@ port module Main exposing (..)
 
 import Basics.Extra exposing (fractionalModBy)
 import Browser
+import Browser.Dom exposing (Element, Error)
 import Browser.Events exposing (onAnimationFrame)
 import Canvas exposing (..)
 import Canvas.Settings exposing (..)
@@ -18,6 +19,7 @@ import Material.Icons as Filled
 import Material.Icons.Types
 import Notes exposing (Note(..), Octave(..), freq)
 import PlayState exposing (PlayAction(..), PlayState, getTimeSinceStart)
+import Task
 import Time exposing (Posix)
 
 
@@ -301,12 +303,17 @@ type alias Model =
     , currentTime : Float
     , config : ScenarioConfig
     , appConfig : AppConfig
+    , canvasWidth : Float
     }
 
 
 emptyPlayState : PlayState
 emptyPlayState =
     { current = Stopped, history = [] }
+
+
+canvasContainerId =
+    "canvas-container"
 
 
 init : () -> ( Model, Cmd Msg )
@@ -321,8 +328,9 @@ init _ =
             , largestSizeRadius = 9
             , smallestSizeRadius = 2
             }
+      , canvasWidth = 510
       }
-    , Cmd.none
+    , Browser.Dom.getElement canvasContainerId |> Task.attempt GotCanvasContainerElement
     )
 
 
@@ -352,6 +360,7 @@ type Msg
     | Stop
     | Pause
     | SetConfig ScenarioConfig
+    | GotCanvasContainerElement (Result Error Element)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -414,6 +423,12 @@ update msg model =
                             Cmd.batch <| List.filterMap identity cmdMs
                     in
                     ( { model | currentTime = currentTime }, cmd )
+
+        GotCanvasContainerElement (Err err) ->
+            ( model, Cmd.none )
+
+        GotCanvasContainerElement (Ok element) ->
+            ( { model | canvasWidth = element.element.width }, Cmd.none )
 
 
 
@@ -575,16 +590,18 @@ renderDot baseCenter baseRadius innerPadding basePeriod largestSizeRadius smalle
 
 
 renderCanvas : Float -> Float -> Float -> Float -> PlayState -> List Dot -> Float -> Float -> Float -> Html Msg
-renderCanvas baseRadius padding innerPadding currentTime playState dots period largestSizeRadius smallestSizeRadius =
+renderCanvas width padding innerPadding currentTime playState dots period largestSizeRadius smallestSizeRadius =
     let
+        -- canvas is a square
+        height =
+            width
+
+        -- the radius of the circle that the outermost dot travels
+        baseRadius =
+            (width - padding * 2) / 2
+
         center =
             ( baseRadius + padding, baseRadius + padding )
-
-        width =
-            baseRadius * 2 + padding * 2
-
-        height =
-            baseRadius * 2 + padding * 2
 
         timeSinceStart =
             getTimeSinceStart currentTime playState
@@ -650,8 +667,7 @@ view model =
     div []
         [ description
         , div
-            [ Html.Attributes.style "margin" "20px auto"
-            , Html.Attributes.style "width" "fit-content"
+            [ Html.Attributes.id "content-container"
             ]
             [ Html.hr
                 [ Html.Attributes.style "border" "0"
@@ -660,13 +676,10 @@ view model =
                 ]
                 []
             , div
-                [ Html.Attributes.style "display" "flex"
-                , Html.Attributes.style "justify-content" "center"
-                , Html.Attributes.style "margin" "20px auto"
-                , Html.Attributes.style "width" "fit-content"
+                [ Html.Attributes.id "canvas-and-selections-container"
                 ]
-                [ div [ Html.Attributes.style "flex" "0" ] <|
-                    [ renderCanvas model.appConfig.baseRadius model.appConfig.padding model.appConfig.innerPadding model.currentTime model.playState model.config.dots model.config.period model.appConfig.largestSizeRadius model.appConfig.smallestSizeRadius
+                [ div [ Html.Attributes.id "canvas-and-controls" ] <|
+                    [ div [ Html.Attributes.id canvasContainerId ] [ renderCanvas model.canvasWidth model.appConfig.padding model.appConfig.innerPadding model.currentTime model.playState model.config.dots model.config.period model.appConfig.largestSizeRadius model.appConfig.smallestSizeRadius ]
                     , buttonToolbar
                         (case model.playState.current of
                             Playing _ ->
@@ -680,14 +693,9 @@ view model =
                         )
                     ]
                 , div
-                    [ Html.Attributes.style "flex" "1"
-                    , Html.Attributes.style "padding" "0 20px"
-                    , Html.Attributes.style "max-width" "250px"
-                    , Html.Attributes.style "display" "flex"
-                    , Html.Attributes.style "flex-direction" "column"
-                    , Html.Attributes.style "justify-content" "center"
+                    [ Html.Attributes.id "selections-container"
                     ]
-                    [ configControls
+                    [ configControls model.config
                     ]
                 ]
             ]
@@ -704,28 +712,23 @@ view model =
         ]
 
 
-renderConfigControl : ScenarioConfig -> Html Msg
-renderConfigControl c =
+renderConfigControl : ScenarioConfig -> ScenarioConfig -> Html Msg
+renderConfigControl selectedConfig config =
     li
-        [ Html.Attributes.style "margin" "10px 0"
-        , Html.Attributes.style "display" "flex"
-        , Html.Attributes.style "justify-content" "flex-end"
-        ]
+        []
         [ Html.button
-            [ Html.Attributes.class "config-control"
-            , onClick <| SetConfig c
+            [ Html.Attributes.classList [ ( "config-control", True ), ( "selected", config == selectedConfig ) ]
+            , onClick <| SetConfig config
             ]
-            [ Html.text <| configName c ]
+            [ Html.text <| configName config ]
         ]
 
 
-configControls : Html Msg
-configControls =
-    List.map renderConfigControl presets
+configControls : ScenarioConfig -> Html Msg
+configControls selectedConfig =
+    List.map (renderConfigControl selectedConfig) presets
         |> ul
-            [ Html.Attributes.style "list-style" "none"
-            , Html.Attributes.style "padding" "0"
-            ]
+            []
 
 
 information : ScenarioConfig -> Html Msg

@@ -10,7 +10,8 @@
 }
 
 body {
-  font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
+  font-family: "Source Sans Pro", "Trebuchet MS", "Lucida Grande",
+    "Bitstream Vera Sans", "Helvetica Neue", sans-serif;
   margin: 0;
   text-align: center;
   color: #293c4b;
@@ -34,4 +35,75 @@ img {
 }
 .config-control:hover {
   background: lightblue;
+}
+.config-control.selected {
+  border-color: blue;
+}
+#content-container {
+  margin: 20px auto;
+  width: fit-content;
+}
+#canvas-and-selections-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px auto;
+  width: fit-content;
+}
+#canvas-and-controls {
+  flex: 0;
+}
+#canvas-container {
+  max-width: 510px;
+}
+#selections-container {
+  flex: 1;
+  padding: 0 20px;
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#selections-container ul {
+  list-style: none;
+  padding: 0;
+}
+#selections-container li {
+  margin: 10px 0;
+  display: flex;
+  justify-content: flex-end;
+}
+@media (max-width: 800px) {
+  #content-container {
+    width: 100%;
+  }
+  #canvas-and-selections-container {
+    flex-direction: column;
+    width: 100%;
+  }
+  #canvas-container {
+    max-width: 100%;
+  }
+  #selections-container {
+    flex-direction: row;
+    padding: 0 10px;
+    max-width: inherit;
+    justify-content: inherit;
+  }
+  #selections-container ul {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+  #selections-container li {
+    max-width: 30%;
+    margin: 1.66667% 1.66667%;
+  }
+  .config-control {
+    width: inherit;
+    font-size: 11px;
+    padding: 7px;
+  }
+  hr {
+    display: none;
+  }
 }
