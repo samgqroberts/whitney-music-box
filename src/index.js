@@ -18,6 +18,10 @@ document.getElementById('startButton').addEventListener('click', () => {
   audioContext = new AudioContext();
 })
 
+/**
+ * Parse a message coming from the Elm port.
+ * Expecting a message of the form { frequency: number, sineTerms: number[] }
+ */
 function parseMessage(message) {
   const node = JSON.parse(message);
   if (!node || typeof node !== 'object') {
@@ -41,6 +45,10 @@ function parseMessage(message) {
   return { frequency, sineTerms };
 }
 
+/**
+ * Given the configuration in the message from the Elm port, create an oscillator and emit a tone.
+ * @param message the message sent from the Elm port, containing frequency and sineTerms fields.
+ */
 const playSound = (message) => {
   if (!audioContext) {
     console.error('cannot play sound, audio context not initialized');
@@ -55,13 +63,14 @@ const playSound = (message) => {
   const gainNode = audioContext.createGain();
   osc.connect(gainNode);
   gainNode.connect(audioContext.destination);
-  const cosineTerms = new Float32Array(sineTerms.length);
+  const cosineTerms = new Float32Array(sineTerms.length); // all cosine terms initialize to 0
   const waveform = audioContext.createPeriodicWave(cosineTerms, sineTerms);
   osc.setPeriodicWave(waveform)
   osc.frequency.value = frequency;
-  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 3.0);
+  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime); // start at volume value 0.1
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 3.0); // taper volume over 3 seconds
   osc.start();
+  // after 3 seconds, completely stop the tone
   setTimeout(() => {
     osc.stop();
   }, 3000);
