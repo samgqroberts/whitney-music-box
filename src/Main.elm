@@ -745,7 +745,7 @@ description =
         [ h1 [] [ Html.text "Whitney Music Box" ]
         , p []
             [ Html.text "by "
-            , Html.a [ Html.Attributes.href "https://samgqroberts.com/" ] [ Html.text "samgqroberts" ]
+            , Html.a [ Html.Attributes.href "https://samgqroberts.com/posts/the-whitney-music-box-in-elm" ] [ Html.text "samgqroberts" ]
             ]
         , p []
             [ Html.text "Originally devised and implemented by "
