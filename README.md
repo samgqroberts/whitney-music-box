@@ -1,8 +1,10 @@
 # Whitney Music Box
 
-A re-creation of [Jim Bumgardner](https://krazydad.com/about.php)'s [Whitney Music Box](http://whitneymusicbox.org/) in Elm.
+A re-creation of [Jim Bumgardner](https://krazydad.com/about.php)'s [Whitney Music Box](http://whitneymusicbox.org/), written in Elm.
 
-Live here: https://whitney.samgqroberts.com
+Check it out here: https://whitney.samgqroberts.com
+
+For more details behind this project, read this blog post: https://samgqroberts.com/posts/the-whitney-music-box-in-elm.
 
 ## Development
 
