@@ -2,9 +2,9 @@
 
 A re-creation of [Jim Bumgardner](https://krazydad.com/about.php)'s [Whitney Music Box](http://whitneymusicbox.org/), written in Elm.
 
-Check it out here: https://whitney.samgqroberts.com
+Check it out here: [whitney.samgqroberts.com](https://whitney.samgqroberts.com).
 
-For more details behind this project, read this blog post: https://samgqroberts.com/posts/the-whitney-music-box-in-elm.
+For more details behind this project, read this blog post: [samgqroberts.com/posts/the-whitney-music-box-in-elm](https://samgqroberts.com/posts/the-whitney-music-box-in-elm).
 
 ## Development
 
